@@ -2,7 +2,7 @@ use sha2::{Digest, Sha256};
 
 use crate::mcore::services::config::NODE_FILE;
 
-// menghasilkan hash unik input + random number
+// menghasilkan hash unik input
 pub fn generate_hash(input: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(input);

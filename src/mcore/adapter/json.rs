@@ -34,7 +34,6 @@ pub enum Action {
 }
 
 pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
-    // Langsung panggil dan kembalikan hasilnya
     create_node(&request.data.name, request.data.pid)
 }
 
@@ -87,11 +86,25 @@ mod test {
         let manager = NodeManager::get_instance();
         manager.reset_for_test();
 
-        let created_node = manager
-            .create("node untuk dihapus", 999)
-            .expect("Harusnya sukses membuat node sebelum dihapus");
+        let node = ApiRequest {
+            version: "1.0".to_string(),
+            action: Action::CreateNode,
+            request_id: "id001".to_string(),
+            timestamp: 17828661,
+            data: CreateNodeData {
+                name: "melisa".to_string(),
+                pid: 808,
+            },
+        };
 
-        let hash_target = created_node.hash;
+
+        let create = match api_create_node(&node) {
+            Ok(proses ) => proses.hash.to_string(),
+            Err(err) => format!("Error terjadi: {:?}", err),   
+        };
+
+
+        let hash_target = create;
         let delete = delete_node(&hash_target);
 
         // Pastikan sekarang harusnya sukses (Ok)
