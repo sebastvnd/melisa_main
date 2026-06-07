@@ -1,3 +1,3 @@
-pub mod node;
-pub mod hashing;
 pub mod config;
+pub mod hashing;
+pub mod node;

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::mcore::services::node::{NodeError, NodeManager, NodeProcess};
 use crate::mcore::{adapter::api::Action::CreateNode, api::services::create_node};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,36 +32,51 @@ pub enum Action {
     DeleteNode,
 }
 
-pub fn ex_create_node(name: &str,  pid: u32) {
-    let response = create_node(name, pid);
-    println!("{}", response);
+pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
+    // Langsung panggil dan kembalikan hasilnya
+    create_node(&request.data.name, request.data.pid)
 }
 
-// data palsu untuk tujuan testing api CreateNode format data seperti ini
-// berlaku untuk aplikasi dari luar ini jadi titik masuk dari data flow
-// program ini - best erick mantap
-pub fn fake_data_request() -> ApiRequest<CreateNodeData> {
-    ApiRequest  {
-        version: "1.0".to_string(), 
-        action: Action::CreateNode,
-        request_id: "id001".to_string(),
-        timestamp: 17828661,
-        data: CreateNodeData {
-            name: "melisa beta".to_string(),
-            pid: 808,
-        },
-    }
-}
+// pub fn api_delete_node(hash: &str) -> bool {
 
-// TODO masih eror coba pikirin lagi data flownya
-// coba untuk bersihkan datanya dulu - ok sukses sudah
-pub fn execute(request: &ApiRequest<CreateNodeData>) {
-    match request.action {
-        Action::CreateNode => {
-            ex_create_node(&request.data.name, request.data.pid);
-        }
-        Action::DeleteNode => {
-            println!("DeleteNode action executed");
-        }
+// }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::mcore::services::config::NODE_FILE;
+    use std::fs;
+
+    #[test]
+    fn test_new_node() {
+        let _ = fs::write(NODE_FILE, "{}");
+
+        // Kosongkan cache di dalam Singleton NodeManager
+        NodeManager::get_instance().reset_for_test();
+
+        let node = ApiRequest {
+            version: "1.0".to_string(),
+            action: Action::CreateNode,
+            request_id: "id001".to_string(),
+            timestamp: 17828661,
+            data: CreateNodeData {
+                name: "melisa beta".to_string(),
+                pid: 808,
+            },
+        };
+
+        let first = api_create_node(&node);
+        assert!(
+            first.is_ok(),
+            "Harusnya sukses karena state sudah di-reset, tapi dapet: {:?}",
+            first
+        );
+
+        let second = api_create_node(&node);
+
+        assert!(
+            matches!(second, Err(NodeError::AlreadyExists)),
+            "Harusnya gagal karena duplikat"
+        );
     }
 }

@@ -1,10 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt::format;
 use std::fs;
+use std::fs::TryLockError::Error;
 use std::io::Result;
+use std::os::unix::process;
+use std::sync::{OnceLock, RwLock};
 
-use crate::mcore::services::hashing::generate_hash;
 use crate::mcore::services::config::NODE_FILE;
+use crate::mcore::services::hashing::generate_hash;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NodeProcess {
@@ -21,51 +25,69 @@ pub enum NodeStatus {
     Stopped,
 }
 
-impl NodeProcess {
-    // Buat proses baru
-    pub fn new(name: &str, pid: u32) -> Result<Self> {
-        let path = NODE_FILE;
+#[derive(Debug)]
+pub enum NodeError {
+    AlreadyExists,                // Error jika node dengan nama tersebut sudah ada
+    IoError((std::io::Error)),    // Menyimpan error dari file system
+    JsonError(serde_json::Error), // Menyimpan error dari serde_json
+}
 
-        let mut processes: HashMap<String, NodeProcess> = match fs::read_to_string(path) {
-            Ok(content) if !content.trim().is_empty() => {
-                serde_json::from_str(&content).unwrap_or_default()
+pub struct NodeManager {
+    processes: RwLock<HashMap<String, NodeProcess>>,
+}
+
+// TODO: ubah fn create_node dan delete_node untuk menggunakan NodeManager sebagai state management
+impl NodeManager {
+    pub fn get_instance() -> &'static Self {
+        static INSTANCE: OnceLock<NodeManager> = OnceLock::new();
+
+        INSTANCE.get_or_init(|| {
+            let path = NODE_FILE;
+
+            let processes = match fs::read_to_string(path) {
+                Ok(content) if !content.trim().is_empty() => {
+                    serde_json::from_str(&content).unwrap_or_default()
+                }
+                _ => HashMap::new(),
+            };
+
+            NodeManager {
+                processes: RwLock::new(processes),
             }
-            _ => HashMap::new(),
-        };
+        })
+    }
 
+    // TODO: ganti result bool menjadi Enum agar lebih tangguh
+    pub fn create(&self, name: &str, pid: u32) -> std::result::Result<NodeProcess, NodeError> {
+        let mut processes_lock = self.processes.write().unwrap();
         let hash = generate_hash(name);
 
-        let new_process = NodeProcess {
+        if processes_lock.contains_key(&hash) {
+            return Err(NodeError::AlreadyExists);
+        }
+
+        let node = NodeProcess {
             hash: hash.clone(),
             name: name.to_string(),
             pid,
             status: NodeStatus::Active,
         };
 
-        processes.insert(hash, new_process.clone());
+        processes_lock.insert(hash, node.clone());
 
-        fs::write(path, serde_json::to_string_pretty(&processes)?)?;
+        let json_data =
+            serde_json::to_string_pretty(&*processes_lock).map_err(NodeError::JsonError)?;
 
-        Ok(new_process)
+        fs::write(NODE_FILE, json_data).map_err(NodeError::IoError)?;
+
+        Ok(node)
     }
-    pub fn delete(hash: &str) -> Result<()> {
-        let path = NODE_FILE;
 
-        let mut processes: HashMap<String, NodeProcess> = match fs::read_to_string(path) {
-            Ok(content) if !content.trim().is_empty() => {
-                let mut map: HashMap<String, NodeProcess> =
-                    serde_json::from_str(&content).unwrap_or_default();
+    pub fn delete(&self, hash: &str) -> Result<()> {
+        let mut processes_lock = self.processes.write().unwrap();
 
-                for (key, proc) in map.iter_mut() {
-                    proc.hash = key.clone();
-                }
-                map
-            }
-            _ => HashMap::new(),
-        };
-
-        if processes.remove(hash).is_some() {
-            fs::write(path, serde_json::to_string_pretty(&processes)?)?;
+        if processes_lock.remove(hash).is_some() {
+            fs::write(NODE_FILE, serde_json::to_string_pretty(&*processes_lock)?)?;
             Ok(())
         } else {
             Err(std::io::Error::new(
@@ -73,5 +95,10 @@ impl NodeProcess {
                 format!("error '{}' not found", hash),
             ))
         }
+    }
+    #[cfg(test)]
+    pub fn reset_for_test(&self) {
+        let mut processes_lock = self.processes.write().unwrap();
+        processes_lock.clear();
     }
 }
