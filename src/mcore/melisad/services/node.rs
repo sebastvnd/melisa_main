@@ -1,14 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fmt::format;
 use std::fs;
-use std::fs::TryLockError::Error;
-use std::io::Result;
-use std::os::unix::process;
 use std::sync::{OnceLock, RwLock};
 
-use crate::mcore::services::config::NODE_FILE;
-use crate::mcore::services::hashing::generate_hash;
+use crate::mcore::melisad::services::config::NODE_FILE;
+use crate::mcore::melisad::services::hashing::generate_hash;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NodeProcess {
@@ -16,6 +12,7 @@ pub struct NodeProcess {
     pub hash: String,
     pub name: String,
     pub pid: u32,
+    pub url: String,
     pub status: NodeStatus,
 }
 
@@ -23,6 +20,7 @@ pub struct NodeProcess {
 pub enum NodeStatus {
     Active,
     Stopped,
+    Unknown,
 }
 
 #[derive(Debug)]
@@ -34,7 +32,8 @@ pub enum NodeError {
 }
 
 pub struct NodeManager {
-    processes: RwLock<HashMap<String, NodeProcess>>,
+    pub processes: RwLock<HashMap<String, NodeProcess>>,
+    pub node : NodeProcess,
 }
 
 // TODO: ubah fn create_node dan delete_node untuk menggunakan NodeManager sebagai state management
@@ -54,11 +53,18 @@ impl NodeManager {
 
             NodeManager {
                 processes: RwLock::new(processes),
+                node: NodeProcess {
+                    hash: String::new(),
+                    name: String::new(),
+                    pid: 0,
+                    url: String::new(),
+                    status: NodeStatus::Unknown,
+                }
             }
         })
     }
 
-    pub fn create(&self, name: &str, pid: u32) -> std::result::Result<NodeProcess, NodeError> {
+    pub fn create(&self, name: &str, pid: u32, url: &str) -> std::result::Result<NodeProcess, NodeError> {
         let mut processes_lock = self.processes.write().unwrap();
         let hash = generate_hash(name);
 
@@ -70,6 +76,7 @@ impl NodeManager {
             hash: hash.clone(),
             name: name.to_string(),
             pid,
+            url: url.to_string(),
             status: NodeStatus::Active,
         };
 

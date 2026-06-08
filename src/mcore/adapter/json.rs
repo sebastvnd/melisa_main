@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::mcore::adapter::json::Action::CreateNode;
 use crate::mcore::api::services::*;
-use crate::mcore::services::node::{NodeError, NodeManager, NodeProcess};
+use crate::mcore::melisad::services::node::{NodeError, NodeManager, NodeProcess};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiRequest<T> {
@@ -25,6 +25,7 @@ pub struct ApiResponse<T> {
 pub struct CreateNodeData {
     name: String,
     pid: u32,
+    url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,7 +35,7 @@ pub enum Action {
 }
 
 pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
-    create_node(&request.data.name, request.data.pid)
+    create_node(&request.data.name, request.data.pid, &request.data.url)
 }
 
 pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
@@ -44,7 +45,7 @@ pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::mcore::services::config::NODE_FILE;
+    use crate::mcore::melisad::services::config::NODE_FILE;
     use std::fs;
 
     #[test]
@@ -62,6 +63,7 @@ mod test {
             data: CreateNodeData {
                 name: "melisa beta".to_string(),
                 pid: 808,
+                url: "http".to_string(),
             },
         };
 
@@ -94,6 +96,7 @@ mod test {
             data: CreateNodeData {
                 name: "melisa".to_string(),
                 pid: 808,
+                url: "http".to_string(),
             },
         };
 

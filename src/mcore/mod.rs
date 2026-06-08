@@ -1,3 +1,3 @@
 pub mod adapter;
 pub mod api;
-pub mod services;
+pub mod melisad;
