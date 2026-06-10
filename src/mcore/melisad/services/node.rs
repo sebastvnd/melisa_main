@@ -29,11 +29,11 @@ pub enum NodeError {
     IoError((std::io::Error)), // Menyimpan error dari file system
     JsonError(serde_json::Error),
     NotFound,
+    InvalidInput(String), // Untuk input yang tidak valid, seperti nama kosong
 }
 
 pub struct NodeManager {
     pub processes: RwLock<HashMap<String, NodeProcess>>,
-    pub node : NodeProcess,
 }
 
 // TODO: ubah fn create_node dan delete_node untuk menggunakan NodeManager sebagai state management
@@ -53,13 +53,6 @@ impl NodeManager {
 
             NodeManager {
                 processes: RwLock::new(processes),
-                node: NodeProcess {
-                    hash: String::new(),
-                    name: String::new(),
-                    pid: 0,
-                    url: String::new(),
-                    status: NodeStatus::Unknown,
-                }
             }
         })
     }

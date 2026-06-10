@@ -62,7 +62,7 @@ mod test {
             timestamp: 17828661,
             data: CreateNodeData {
                 name: "melisa beta".to_string(),
-                pid: 808,
+                pid: 100000,
                 url: "http".to_string(),
             },
         };
@@ -95,7 +95,7 @@ mod test {
             timestamp: 17828661,
             data: CreateNodeData {
                 name: "melisa".to_string(),
-                pid: 808,
+                pid: 100000,
                 url: "http".to_string(),
             },
         };

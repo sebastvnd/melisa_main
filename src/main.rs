@@ -9,7 +9,7 @@ use mcore::melisad::services::node::{NodeManager, NodeError};
 #[tokio::main]
 async fn main() {
     let name = "Example Pfsfdsfrocsffff";
-    let pid = 124346665;
+    let pid = 124;
     let url = "http://akses";
     
     // Ambil instance manager sekali saja agar kode lebih bersih
