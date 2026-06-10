@@ -1,6 +1,6 @@
 use sha2::{Digest, Sha256};
 
-use crate::mcore::melisad::services::config::NODE_FILE;
+use crate::mcore::melisad::services::mconf::NODE_FILE;
 
 // menghasilkan hash unik input
 pub fn generate_hash(input: &str) -> String {

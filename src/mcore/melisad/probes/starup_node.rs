@@ -1,8 +1,9 @@
 use futures;
 use std::fs;
 
-use crate::mcore::melisad::services::node::{NodeError, NodeManager, NodeProcess, NodeStatus};
-use crate::mcore::melisad::services::config::NODE_FILE;
+use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::melisad::services::mconf::NODE_FILE;
+use crate::mcore::melisad::services::node::{NodeManager, NodeProcess, NodeStatus};
 
 impl NodeManager {
     pub async fn startup_node_check(&self) -> std::result::Result<(), NodeError> {
@@ -13,14 +14,14 @@ impl NodeManager {
             .unwrap_or_default();
 
         let checks = {
-            let processes_lock = self.processes.read().unwrap(); 
+            let processes_lock = self.processes.read().unwrap();
             let mut tasks = Vec::new();
-            
+
             for (hash, node) in processes_lock.iter() {
                 let hash_clone = hash.clone();
                 let url_clone = node.url.clone();
-                let client_clone = http_client.clone(); 
-                
+                let client_clone = http_client.clone();
+
                 let check_future = async move {
                     let status = match client_clone.get(&url_clone).send().await {
                         Ok(response) if response.status().is_success() => NodeStatus::Active,
@@ -30,7 +31,7 @@ impl NodeManager {
                 };
                 tasks.push(check_future);
             }
-            tasks 
+            tasks
         }; //lepas Read lock 
 
         let results = futures::future::join_all(checks).await;
@@ -52,12 +53,11 @@ impl NodeManager {
     /// Fungsi utilitas untuk menulis state ke JSON file
     fn save_state_to_disk(&self) -> std::result::Result<(), NodeError> {
         let processes_lock = self.processes.read().unwrap();
-        
-        let json_data = serde_json::to_string_pretty(&*processes_lock)
-            .map_err(NodeError::JsonError)?; // Pastikan enum NodeError::JsonError ada
-            
-        fs::write(NODE_FILE, json_data)
-            .map_err(NodeError::IoError)?;   // Pastikan enum NodeError::IoError ada
+
+        let json_data =
+            serde_json::to_string_pretty(&*processes_lock).map_err(NodeError::JsonError)?; // Pastikan enum NodeError::JsonError ada
+
+        fs::write(NODE_FILE, json_data).map_err(NodeError::IoError)?; // Pastikan enum NodeError::IoError ada
 
         Ok(())
     }

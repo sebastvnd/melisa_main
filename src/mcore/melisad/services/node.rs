@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::{OnceLock, RwLock};
 
-use crate::mcore::melisad::services::config::NODE_FILE;
+use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::melisad::services::mconf::NODE_FILE;
 use crate::mcore::melisad::services::hashing::generate_hash;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -21,15 +22,6 @@ pub enum NodeStatus {
     Active,
     Stopped,
     Unknown,
-}
-
-#[derive(Debug)]
-pub enum NodeError {
-    AlreadyExists,             // Error jika node dengan nama tersebut sudah ada
-    IoError((std::io::Error)), // Menyimpan error dari file system
-    JsonError(serde_json::Error),
-    NotFound,
-    InvalidInput(String), // Untuk input yang tidak valid, seperti nama kosong
 }
 
 pub struct NodeManager {
@@ -57,7 +49,12 @@ impl NodeManager {
         })
     }
 
-    pub fn create(&self, name: &str, pid: u32, url: &str) -> std::result::Result<NodeProcess, NodeError> {
+    pub fn create(
+        &self,
+        name: &str,
+        pid: u32,
+        url: &str,
+    ) -> std::result::Result<NodeProcess, NodeError> {
         let mut processes_lock = self.processes.write().unwrap();
         let hash = generate_hash(name);
 
@@ -104,13 +101,9 @@ impl NodeManager {
         let mut list: Vec<String> = processes_lock.keys().cloned().collect();
         list.sort();
 
-        if list.is_empty() {
-            None
-        } else {
-            Some(list)
-        }
+        if list.is_empty() { None } else { Some(list) }
     }
-    
+
     #[cfg(test)]
     pub fn reset_for_test(&self) {
         let mut processes_lock = self.processes.write().unwrap();

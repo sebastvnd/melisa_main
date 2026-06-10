@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::mcore::adapter::json::Action::CreateNode;
 use crate::mcore::api::services::*;
-use crate::mcore::melisad::services::node::{NodeError, NodeManager, NodeProcess};
+use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::melisad::services::node::{NodeManager, NodeProcess};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiRequest<T> {
@@ -45,7 +46,7 @@ pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::mcore::melisad::services::config::NODE_FILE;
+    use crate::mcore::melisad::services::mconf::NODE_FILE;
     use std::fs;
 
     #[test]
@@ -61,9 +62,9 @@ mod test {
             request_id: "id001".to_string(),
             timestamp: 17828661,
             data: CreateNodeData {
-                name: "melisa beta".to_string(),
+                name: "melisa api".to_string(),
                 pid: 100000,
-                url: "http".to_string(),
+                url: "http://localhost:3000".to_string(),
             },
         };
 
@@ -94,18 +95,16 @@ mod test {
             request_id: "id001".to_string(),
             timestamp: 17828661,
             data: CreateNodeData {
-                name: "melisa".to_string(),
+                name: "melisa api".to_string(),
                 pid: 100000,
-                url: "http".to_string(),
+                url: "http://localhost:3000".to_string(),
             },
         };
 
-
         let create = match api_create_node(&node) {
-            Ok(proses ) => proses.hash.to_string(),
-            Err(err) => format!("Error terjadi: {:?}", err),   
+            Ok(proses) => proses.hash.to_string(),
+            Err(err) => format!("Error terjadi: {:?}", err),
         };
-
 
         let hash_target = create;
         let delete = delete_node(&hash_target);
