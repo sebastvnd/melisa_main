@@ -8,6 +8,7 @@
 mod mcore;
 use crate::mcore::config::load_config::CONFIG;
 use crate::mcore::melisad::proxy::run_proxy_server;
+use crate::mcore::melisad::management::server::run_management_server;
 use crate::mcore::melisad::services::node::NODE_MANAGER;
 use crate::mcore::mlog::LOGGER;
 use std::error::Error;
@@ -51,8 +52,16 @@ async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
         config.nodes.health_check_interval_secs.max(1),
     ));
 
-    run_proxy_server().await?;
-    Ok(())
+    // Spawn management server
+    let management_handle = tokio::spawn(run_management_server());
+
+    // Run proxy server
+    let proxy_result = run_proxy_server().await;
+
+    // Abort management server if proxy returns
+    management_handle.abort();
+
+    proxy_result
 }
 
 fn spawn_node_health_monitor(interval: Duration) {

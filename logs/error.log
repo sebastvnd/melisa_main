@@ -1,0 +1,128 @@
+[2026/06/12 22:08:10] [ERROR] [REQ-e445d7a79c2c4b02bbaf6f4422049ced] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:14] [ERROR] [REQ-f983d39508db466895716c64c7658292] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:14] [ERROR] [REQ-983c01f47ee848b084ba3ab21942d9af] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:14] [ERROR] [REQ-4acee76e17f64034b13b1b643cdbf9e6] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:14] [ERROR] [REQ-bdec97080ea54c5e90a3259b8477f871] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:47] [ERROR] [REQ-5061d3c3ec6447c0869e21166b00c291] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:07] [INFO] Melisa daemon startup
+[2026/06/12 22:08:07] [INFO] Node startup validation completed
+[2026/06/12 22:08:07] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:08:07] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:08:47] [ERROR] [REQ-b4b9334328cd44b6877c843d4fa92cd2] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:48] [ERROR] [REQ-4a0be6a9e01a45de96aaeccd9db8982a] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:48] [ERROR] [REQ-8f11375e00af45bfbe756084ea95a3ea] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:48] [ERROR] [REQ-76f78ec0d9704804a5e5c517ef4cabe4] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:48] [ERROR] [REQ-ef824e39230d464b99c8c64450e6ee67] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:49] [ERROR] [REQ-590286cb37064427af4b0bcebbec3552] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:49] [ERROR] [REQ-0680b763e58f4c328169e5dd8fba1341] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:49] [ERROR] [REQ-2ca16384bd5e47318f88162952cdbd05] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:49] [ERROR] [REQ-e10ecc3ebca9478ea1e60ec257a33e1a] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:50] [ERROR] [REQ-44bacbf73db64aaf8f8db04b5a94b506] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:50] [ERROR] [REQ-825161a4783645c58e7370f0ada650ba] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:08:50] [ERROR] [REQ-f56c8c583cf24f95a33877d9830d550b] No active nodes available in the framework for 127.0.0.1:8080/
+[2026/06/12 22:12:41] [INFO] Melisa daemon startup
+[2026/06/12 22:12:41] [INFO] Node startup validation completed
+[2026/06/12 22:12:41] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:12:41] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:13:13] [INFO] Node registered via API: mnode at http://127.0.0.1:3000
+[2026/06/12 22:16:10] [ERROR] Melisa stopped: Address already in use (os error 48)
+[2026/06/12 22:16:10] [INFO] Melisa daemon startup
+[2026/06/12 22:16:10] [INFO] Node startup validation completed
+[2026/06/12 22:17:15] [ERROR] Registration failed: AlreadyExists
+[2026/06/12 22:17:03] [INFO] Melisa daemon startup
+[2026/06/12 22:17:03] [INFO] Node startup validation completed
+[2026/06/12 22:17:03] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:17:03] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:17:33] [ERROR] [REQ-03e5de83c74c47c1b9c8437fa6cf2d5e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:35] [ERROR] [REQ-4c4f127dfcfe40a68c7bd9a2580cfe02] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:35] [ERROR] [REQ-cf1ff1dde7d84cdcbe4656ea4b397f9e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:36] [ERROR] [REQ-cc825fa6b1284374960dd135e43e79cf] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:36] [ERROR] [REQ-8597ef06544846eaa5afd48fa312919c] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:36] [ERROR] [REQ-4d9065cbe8e74ebaaea84bf507834dd3] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:37] [ERROR] [REQ-ed6640bfaa524b8e848dd42f1582a8c5] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:37] [ERROR] [REQ-b68f0e25867941358327a7523c7b3a4c] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:37] [ERROR] [REQ-fa1155d89d634ad8b007ad144e824081] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:38] [ERROR] [REQ-8fb1591d4a584bb18f37246e34824ebe] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:38] [ERROR] [REQ-026f335470d9418492af0d23e7e349ef] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:38] [ERROR] [REQ-5093181988244232a797c0a3cfdcf643] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:38] [ERROR] [REQ-d787a969053440ddbc9309b4604b2d3b] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:39] [ERROR] [REQ-7edf3e14c7344a46bd2c69cb92aa3cef] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:39] [ERROR] [REQ-7b2d2d0afbfd4c30ba7fe12aaea2a9eb] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:39] [ERROR] [REQ-29042716e1a34008b99ded92fb4c066b] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:40] [ERROR] [REQ-dc22dc72eb40444d9b4f1451ea954f30] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:40] [ERROR] [REQ-88464651bcc84f729fc548775621b23f] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:40] [ERROR] [REQ-67dd6f09d09e45edaca284164c42327e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:41] [ERROR] [REQ-72734f3257004295859489cc6c72838e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:41] [ERROR] [REQ-2c128ded896446a88354980f8144b56d] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:53] [ERROR] [REQ-7eee2662d4804e3eada816efabf7902e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:54] [ERROR] [REQ-c03f903e4ba7481ab66f46fcf56417aa] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:54] [ERROR] [REQ-228d9056ffea489ab384ae140201d21f] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:54] [ERROR] [REQ-14b3bf9913e44ee5afe9aed6513c7184] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:54] [ERROR] [REQ-a372fc21694e40a9a409fe419980ea21] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:54] [ERROR] [REQ-89491565fe914e8cb7173dd040dcccec] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:55] [ERROR] [REQ-8a1db3e52f6840d2b8c3058b1bcd7545] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:55] [ERROR] [REQ-a9be72b37a2f4aa8af9ac7765102714a] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:55] [ERROR] [REQ-252191ee94c2407293a9e96715dd889d] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:55] [ERROR] [REQ-8bb180b6db404d5cae775d63dae0c3a9] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:56] [ERROR] [REQ-23950d5ae2cf4395b4a97d5bba7bca05] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:56] [ERROR] [REQ-8007daa972ba4a0996de42b9a5e3c859] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:56] [ERROR] [REQ-6f63fca29f5d4700b8992682edc2cce1] No route found for 127.0.0.1:8080/
+[2026/06/12 22:17:57] [ERROR] [REQ-fc91e7ccddf04e959ae0c89cf4fa6696] No route found for 127.0.0.1:8080/
+[2026/06/12 22:18:17] [ERROR] [REQ-bf89347024d143368bb2b7bf863e2c73] No route found for 127.0.0.1:8080/
+[2026/06/12 22:18:21] [ERROR] [REQ-d3a9dc451b7e48fbbe1e4a44bd599ba9] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:23] [ERROR] [REQ-f799b133f59d4bf1aa03eead62a08a04] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:23] [ERROR] [REQ-1b30077805a0464e8cc01749d3335f22] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:23] [ERROR] [REQ-eaf9cfe80e224e9ea993ab70ad0319db] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:23] [ERROR] [REQ-50cdfffdc35a40e696a656f301f4e3d9] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:24] [ERROR] [REQ-d11a182054134b8289eb0bf1abd9cc13] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:24] [ERROR] [REQ-4bafe7d02c7b440ca7435fd9068021e7] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:24] [ERROR] [REQ-497d82debf82499f93fa481a96e05383] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:24] [ERROR] [REQ-f243baca21e34b529b303e0bb3439c46] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:24] [ERROR] [REQ-c5179070abdf415196484c8fb375670a] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:25] [ERROR] [REQ-123f58bd65e5402f8b6c34a24d4a78fd] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:25] [ERROR] [REQ-5455d716ff8647fa9b188db49d2f3332] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:25] [ERROR] [REQ-2c85bb4187374fa78299e38e6ffabbf6] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:25] [ERROR] [REQ-826364e5ac7a498fbf157c6f10ed3b31] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:26] [ERROR] [REQ-1f9a9f212f444ee0864da9fd39be25bb] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:26] [ERROR] [REQ-5f187d99713243e7846b72f7398a4a8f] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:26] [ERROR] [REQ-27c4bc128d634ba6a9ca8a6b83f47f8c] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:26] [ERROR] [REQ-f52297c0ffef4f2a9c68c18f092ce064] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:26] [ERROR] [REQ-5f5bb174192d4fe6a89c6b7e8272f727] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:18:27] [ERROR] [REQ-079a6c8d7d484346999b45b5bb5c851d] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:21:04] [ERROR] Melisa stopped: Address already in use (os error 48)
+[2026/06/12 22:21:04] [INFO] Melisa daemon startup
+[2026/06/12 22:21:04] [INFO] Node startup validation completed
+[2026/06/12 22:21:42] [ERROR] Registration failed: InvalidInput("name cannot be empty")
+[2026/06/12 22:21:32] [INFO] Melisa daemon startup
+[2026/06/12 22:21:32] [INFO] Node startup validation completed
+[2026/06/12 22:21:32] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:21:32] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:23:50] [ERROR] Melisa stopped: Address already in use (os error 48)
+[2026/06/12 22:23:50] [INFO] Melisa daemon startup
+[2026/06/12 22:23:50] [INFO] Node startup validation completed
+[2026/06/12 22:23:54] [ERROR] Melisa stopped: Address already in use (os error 48)
+[2026/06/12 22:23:54] [INFO] Melisa daemon startup
+[2026/06/12 22:23:54] [INFO] Node startup validation completed
+[2026/06/12 22:23:19] [INFO] Melisa daemon startup
+[2026/06/12 22:23:19] [INFO] Node startup validation completed
+[2026/06/12 22:23:19] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:23:19] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:24:42] [ERROR] [REQ-ebace2ec78ef4bc1b3b8d27c9080f8a9] No route found for 127.0.0.1:8080/
+[2026/06/12 22:24:25] [INFO] Melisa daemon startup
+[2026/06/12 22:24:26] [INFO] Node startup validation completed
+[2026/06/12 22:24:26] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:24:26] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:24:29] [INFO] Node registered via API: mnode-service at http://127.0.0.1:3000
+[2026/06/12 22:24:42] [ERROR] [REQ-e39fa054d01a4469bb5ddb922e434b7a] No route found for 127.0.0.1:8080/
+[2026/06/12 22:24:43] [ERROR] [REQ-34791a575ab344809acaaf2f2d0e3366] No route found for 127.0.0.1:8080/
+[2026/06/12 22:24:43] [ERROR] [REQ-c0021359b30249448318d99603a2cdd4] No route found for 127.0.0.1:8080/
+[2026/06/12 22:24:43] [ERROR] [REQ-ff06671c268f4e8f8d59867f0df40a3a] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:01] [ERROR] [REQ-75a6b1dd354441fa9bae2475a8ef6c2d] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:01] [ERROR] [REQ-d53dc0bb2076496da2782b28bf60834a] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:01] [ERROR] [REQ-7310f94546e443f2b6d17e634e64e213] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:01] [ERROR] [REQ-d4a4e0edc4d04401a2dfd127774b40d1] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:02] [ERROR] [REQ-cb4d8d58322c476e9b3e585677fcdd93] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:02] [ERROR] [REQ-6f8ef33d8c2c4b7d8b226f5e7a8dcbcc] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:02] [ERROR] [REQ-f9eaad8e04a7479281e1731890b21be2] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:39] [ERROR] [REQ-b2e23954921a4eeb87a7bea2bace550e] No route found for 127.0.0.1:8080/
+[2026/06/12 22:25:54] [ERROR] [REQ-f96abf8f687846b0ae4bb7c3ee9a85a3] No route found for 127.0.0.1:8080/mnode

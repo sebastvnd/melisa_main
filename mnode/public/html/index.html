@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNode - Custom Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 MNode Dashboard</h1>
+            <p class="subtitle">Custom HTML Files Served by MNode</p>
+        </header>
+
+        <main>
+            <section class="info-card">
+                <h2>📋 How It Works</h2>
+                <div class="content">
+                    <p><strong>MNode = Worker Node</strong></p>
+                    <ul>
+                        <li>MNode menjalankan backend service Anda</li>
+                        <li>Serve static files (HTML, CSS, JS) dari folder <code>public/html</code></li>
+                        <li>Provide API endpoints untuk data/operations</li>
+                        <li>Auto-register ke Melisa Management API saat startup</li>
+                        <li>Proxy Melisa akan route traffic ke MNode sesuai routing rules</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>📁 File Structure</h2>
+                <div class="content">
+                    <pre><code>mnode/
+├── mnode.conf          ← Configuration file
+├── public/
+│   └── html/           ← Your static files go here
+│       ├── index.html  ← Homepage
+│       ├── style.css   ← Stylesheets
+│       ├── app.js      ← JavaScript
+│       └── ...
+└── src/
+    ├── main.rs
+    ├── config.rs       ← Reads mnode.conf
+    ├── handler.rs      ← Serves files from public/html
+    └── ...</code></pre>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>⚙️ Configuration (mnode.conf)</h2>
+                <div class="content">
+                    <pre><code>[static_files]
+# Directory untuk HTML/CSS/JS files (relatif dari mnode root)
+directory = "./public/html"
+enabled = true
+
+[registration]
+# Auto-register ke Melisa
+melisa_host = "127.0.0.1"
+melisa_port = 8888
+node_domain = "api.example.com"
+node_route_path = "/mnode"</code></pre>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>📝 Steps to Use Custom HTML</h2>
+                <div class="content">
+                    <ol>
+                        <li>Edit <code>mnode.conf</code> untuk konfigurasi</li>
+                        <li>Create/edit HTML files di <code>public/html/</code>
+                            <ul>
+                                <li><code>index.html</code> = Homepage (served at /)</li>
+                                <li>Other files served dengan relative path</li>
+                            </ul>
+                        </li>
+                        <li>Add CSS/JS/images di folder yang sama</li>
+                        <li>Run: <code>cargo run --bin mnode</code></li>
+                        <li>Access via: <code>http://localhost:3000/</code></li>
+                    </ol>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>🔗 Available Endpoints</h2>
+                <div class="content">
+                    <ul>
+                        <li><strong>GET /</strong> → Serve index.html dari public/html</li>
+                        <li><strong>GET /page.html</strong> → Serve public/html/page.html</li>
+                        <li><strong>GET /style.css</strong> → Serve public/html/style.css</li>
+                        <li><strong>GET /api/info</strong> → Node information (JSON)</li>
+                        <li><strong>GET /api/health</strong> → Health check (JSON)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>🔒 Security Notes</h2>
+                <div class="content">
+                    <ul>
+                        <li>Directory traversal protected (.. paths blocked)</li>
+                        <li>Only files served, not directories</li>
+                        <li>MIME types auto-detected</li>
+                        <li>Static files cacheable (1 hour max-age)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="info-card">
+                <h2>🧪 Test Your Setup</h2>
+                <div class="content">
+                    <pre><code># Terminal 1 - Start Melisa
+cargo run --bin melisa_beta
+
+# Terminal 2 - Start MNode
+cd mnode && cargo run --bin mnode
+
+# Terminal 3 - Test endpoints
+curl http://localhost:3000/                  # index.html
+curl http://localhost:3000/api/info          # JSON
+curl http://localhost:3000/api/health        # Health check
+
+# Check Melisa management
+curl http://localhost:8888/nodes             # List registered nodes</code></pre>
+                </div>
+            </section>
+
+            <section class="info-card action">
+                <h2>✨ Ready to Customize?</h2>
+                <p>Edit files in <code>public/html/</code> dan refresh browser untuk melihat changes!</p>
+                <p>Check out <code>style.css</code> dan <code>app.js</code> untuk contoh.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>MNode v0.1.0 - Melisa Network Node Worker</p>
+            <p><a href="/api/info">Node Info API</a> | <a href="/api/health">Health Check</a></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

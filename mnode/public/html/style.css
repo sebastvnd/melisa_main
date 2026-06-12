@@ -1,0 +1,200 @@
+/* MNode Custom Dashboard Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #667eea;
+    --secondary: #764ba2;
+    --success: #4CAF50;
+    --warning: #ff9800;
+    --danger: #f44336;
+    --dark: #333;
+    --light: #f5f5f5;
+    --gray: #999;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+main {
+    padding: 40px 20px;
+}
+
+.info-card {
+    background: var(--light);
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.info-card.action {
+    background: #fff9e6;
+    border-left-color: var(--warning);
+    text-align: center;
+}
+
+.info-card h2 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.info-card .content {
+    color: #555;
+}
+
+.info-card ul,
+.info-card ol {
+    margin-left: 25px;
+    margin-top: 10px;
+}
+
+.info-card li {
+    margin: 8px 0;
+}
+
+.info-card code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+    color: var(--danger);
+}
+
+.info-card pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.info-card pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+footer {
+    background: var(--light);
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-size: 0.95em;
+}
+
+footer a {
+    color: var(--primary);
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: 500;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    main {
+        padding: 20px 15px;
+    }
+
+    .info-card {
+        padding: 15px;
+    }
+
+    .info-card h2 {
+        font-size: 1.2em;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.info-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.info-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.info-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.info-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.info-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.info-card:nth-child(5) {
+    animation-delay: 0.5s;
+}

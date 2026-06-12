@@ -208,6 +208,9 @@ impl Logger {
 
     /// Log proxy-specific events
     pub fn log_proxy(&self, msg: &str) -> std::io::Result<()> {
+        if !self.config.proxy_log_enabled {  // ✅ Hormati config
+            return Ok(());
+        }
         let timestamp = Local::now().format("%Y/%m/%d %H:%M:%S%.3f").to_string();
         let log_line = format!("[{}] {}", timestamp, msg);
 
@@ -222,27 +225,34 @@ impl Logger {
     /// Manual flush buffers ke disk
     pub fn flush(&self) -> std::io::Result<()> {
         if let Ok(mut buffer) = self.buffer.lock() {
-            // Flush access logs
             for line in buffer.access_logs.drain(..) {
                 self.write_to_file(&self.config.access_log_path(), &line)?;
                 self.access_rotator.check_and_rotate()?;
             }
-
-            // Flush error logs
             for line in buffer.error_logs.drain(..) {
                 self.write_to_file(&self.config.error_log_path(), &line)?;
                 self.error_rotator.check_and_rotate()?;
             }
-
-            // Flush debug logs
             for line in buffer.debug_logs.drain(..) {
                 self.write_to_file(&self.config.debug_log_path(), &line)?;
                 self.debug_rotator.check_and_rotate()?;
             }
-
+            // ✅ TAMBAHKAN: INFO dan WARN ke error.log (konvensi Nginx)
+            for line in buffer.info_logs.drain(..) {
+                self.write_to_file(&self.config.error_log_path(), &line)?;
+                self.error_rotator.check_and_rotate()?;
+            }
+            for line in buffer.warn_logs.drain(..) {
+                self.write_to_file(&self.config.error_log_path(), &line)?;
+                self.error_rotator.check_and_rotate()?;
+            }
+            // ✅ TAMBAHKAN: proxy logs ke proxy.log
+            for line in buffer.proxy_logs.drain(..) {
+                self.write_to_file(&self.config.proxy_log_path(), &line)?;
+                self.proxy_rotator.check_and_rotate()?;
+            }
             buffer.last_flush = SystemTime::now();
         }
-
         Ok(())
     }
 

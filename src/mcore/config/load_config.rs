@@ -20,6 +20,9 @@ pub struct Config {
 
     #[serde(default)]
     pub proxy: ProxyConfig,
+
+    #[serde(default)]
+    pub management: ManagementConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,6 +58,15 @@ pub struct ProxyConfig {
     pub metrics_report_interval_secs: u64,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct ManagementConfig {
+    #[serde(default = "default_management_port")]
+    pub port: u16,
+
+    #[serde(default = "default_management_enabled")]
+    pub enabled: bool,
+}
+
 impl Default for NodesConfig {
     fn default() -> Self {
         NodesConfig {
@@ -74,6 +86,15 @@ impl Default for ProxyConfig {
             max_retries: default_max_retries(),
             retry_backoff_ms: default_retry_backoff(),
             metrics_report_interval_secs: default_metrics_interval(),
+        }
+    }
+}
+
+impl Default for ManagementConfig {
+    fn default() -> Self {
+        ManagementConfig {
+            port: default_management_port(),
+            enabled: default_management_enabled(),
         }
     }
 }
@@ -112,6 +133,14 @@ fn default_retry_backoff() -> u64 {
 
 fn default_metrics_interval() -> u64 {
     60 // seconds
+}
+
+fn default_management_port() -> u16 {
+    8888
+}
+
+fn default_management_enabled() -> bool {
+    true
 }
 
 impl Config {

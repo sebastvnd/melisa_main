@@ -24,6 +24,10 @@ pub struct LogConfig {
     #[serde(default)]
     pub debug_log_enabled: bool,
 
+    // Enable proxy log
+    #[serde(default = "default_true")]
+    pub proxy_log_enabled: bool,
+
     /// Max ukuran file log sebelum rotation (dalam MB)
     #[serde(default = "default_max_file_size")]
     pub max_file_size_mb: u64,
@@ -77,6 +81,7 @@ impl Default for LogConfig {
             access_log_format: default_access_log_format(),
             error_log_enabled: default_true(),
             debug_log_enabled: false,
+            proxy_log_enabled: default_true(),
             max_file_size_mb: default_max_file_size(),
             max_backups: default_max_backups(),
             flush_interval_ms: default_flush_interval(),

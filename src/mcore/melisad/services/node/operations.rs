@@ -109,6 +109,12 @@ impl NodeManager {
 
         if list.is_empty() { None } else { Some(list) }
     }
+
+    /// Get node berdasarkan hash
+    pub fn get(&self, hash: &str) -> Option<NodeProcess> {
+        let processes_lock = self.processes.read().unwrap();
+        processes_lock.get(hash).cloned()
+    }
 }
 
 fn normalize_url(url: &str) -> Result<String, NodeError> {
