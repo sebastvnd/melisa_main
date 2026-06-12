@@ -1,4 +1,4 @@
-use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::probes::liveness_node::check_node_network_with_client;
 use crate::mcore::melisad::services::node::NodeManager;
 use std::sync::Arc;

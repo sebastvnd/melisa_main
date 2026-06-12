@@ -50,6 +50,9 @@ struct LogBuffer {
     access_logs: Vec<String>,
     error_logs: Vec<String>,
     debug_logs: Vec<String>,
+    info_logs: Vec<String>,
+    warn_logs: Vec<String>,
+    proxy_logs: Vec<String>,
     last_flush: SystemTime,
 }
 
@@ -83,6 +86,9 @@ impl Logger {
                 access_logs: Vec::new(),
                 error_logs: Vec::new(),
                 debug_logs: Vec::new(),
+                info_logs: Vec::new(),
+                warn_logs: Vec::new(),
+                proxy_logs: Vec::new(),
                 last_flush: SystemTime::now(),
             })),
             level,
@@ -134,10 +140,6 @@ impl Logger {
             return Ok(());
         }
 
-        if self.level > LogLevel::Error {
-            return Ok(());
-        }
-
         let timestamp = Local::now().format("%Y/%m/%d %H:%M:%S").to_string();
         let log_line = format!("[{}] [ERROR] {}", timestamp, msg);
 
@@ -180,7 +182,7 @@ impl Logger {
         let log_line = format!("[{}] [INFO] {}", timestamp, msg);
 
         if let Ok(mut buffer) = self.buffer.lock() {
-            buffer.error_logs.push(log_line); // Simpan di error log untuk info level
+            buffer.info_logs.push(log_line); // Simpan di info log untuk info level
         }
 
         self.check_and_flush()?;
@@ -197,7 +199,7 @@ impl Logger {
         let log_line = format!("[{}] [WARN] {}", timestamp, msg);
 
         if let Ok(mut buffer) = self.buffer.lock() {
-            buffer.error_logs.push(log_line);
+            buffer.warn_logs.push(log_line);
         }
 
         self.check_and_flush()?;
@@ -208,8 +210,12 @@ impl Logger {
     pub fn log_proxy(&self, msg: &str) -> std::io::Result<()> {
         let timestamp = Local::now().format("%Y/%m/%d %H:%M:%S%.3f").to_string();
         let log_line = format!("[{}] {}", timestamp, msg);
-        self.write_to_file(&self.config.proxy_log_path(), &log_line)?;
-        self.proxy_rotator.check_and_rotate()?;
+
+        if let Ok(mut buffer) = self.buffer.lock() {
+            buffer.proxy_logs.push(log_line);
+        }
+
+        self.check_and_flush()?;
         Ok(())
     }
 

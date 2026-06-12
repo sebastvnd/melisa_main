@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::mcore::api::services::*;
-use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::NodeProcess;
 
 #[derive(Serialize, Deserialize, Debug)]

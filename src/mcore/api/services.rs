@@ -1,6 +1,6 @@
 // src/mcore/api/services.rs
 
-use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::mconf::{PID_END, PID_START}; // Pastikan import ini ada
 use crate::mcore::melisad::services::node::{NODE_MANAGER, NodeProcess};
 

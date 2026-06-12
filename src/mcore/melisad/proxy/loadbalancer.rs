@@ -1,5 +1,6 @@
+/// Load balancing strategies untuk node selection\
+use rand::seq::{IndexedMutRandom, SliceRandom};
 use std::sync::Arc;
-/// Load balancing strategies untuk node selection
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -11,7 +12,7 @@ pub enum LoadBalancingStrategy {
     RoundRobin,
 
     /// Least connections
-    LeastConnections,
+    // LeastConnections,
 
     /// Random selection
     Random,
@@ -47,22 +48,40 @@ impl LoadBalancer {
         // Select based on strategy
         match self.strategy {
             LoadBalancingStrategy::RoundRobin => {
+                if matching_nodes.is_empty() {
+                    return None;
+                }
+
+                // Menggunakan fetch_add yang sudah benar,
+                // tapi pastikan tidak terjadi panic jika matching_nodes kosong
                 let idx =
                     self.round_robin_index.fetch_add(1, Ordering::Relaxed) % matching_nodes.len();
                 Some(matching_nodes[idx].clone())
             }
-            LoadBalancingStrategy::LeastConnections => {
-                // Simplified: sort by PID
-                matching_nodes.sort_by_key(|n| n.pid);
-                Some(matching_nodes[0].clone())
-            }
+
+            // LoadBalancingStrategy::LeastConnections => {
+            //     if matching_nodes.is_empty() {
+            //         return None;
+            //     }
+
+            //     // Alih-alih melakukan sorting pada seluruh array (O(N log N)),
+            //     // gunakan `min_by_key` untuk mencari nilai terkecil dalam satu putaran (O(N)).
+            //     // CATATAN: Asumsikan struct node Anda memiliki field atau method `active_connections()`.
+            //     let selected_node = matching_nodes
+            //         .iter()
+            //         .min_by_key(|n| n.active_connections) // Ganti dengan .active_connections() jika berupa method
+            //         .cloned();
+
+            //     selected_node
+            // }
+
             LoadBalancingStrategy::Random => {
-                let idx = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos() as usize
-                    % matching_nodes.len();
-                Some(matching_nodes[idx].clone())
+                if matching_nodes.is_empty() {
+                    return None;
+                }
+
+                let mut rng = rand::rng();
+                matching_nodes.choose_mut(&mut rng).cloned()
             }
         }
     }

@@ -1,4 +1,4 @@
-use crate::mcore::errors::e_node::NodeError;
+use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::manager::NodeManager;
 /// Node persistence (file I/O) dan state management
 use std::fs;

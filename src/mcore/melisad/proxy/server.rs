@@ -38,7 +38,7 @@ pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send +
 
     // Setup load balancer
     let load_balancer = Arc::new(match CONFIG.proxy.load_balancer_strategy.as_str() {
-        "least_connections" => LoadBalancer::new(LoadBalancingStrategy::LeastConnections),
+        // "least_connections" => LoadBalancer::new(LoadBalancingStrategy::LeastConnections),
         "random" => LoadBalancer::new(LoadBalancingStrategy::Random),
         _ => LoadBalancer::new(LoadBalancingStrategy::RoundRobin),
     });
