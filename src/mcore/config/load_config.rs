@@ -5,7 +5,26 @@ use crate::mcore::melisad::mconf::CONFIG_PATH;
 use crate::mcore::mlog::config::LogConfig;
 use once_cell::sync::Lazy;
 
-pub static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_file(CONFIG_PATH).unwrap());
+pub static CONFIG: Lazy<Config> = Lazy::new(|| {
+    match Config::from_file(CONFIG_PATH) {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            // Tampilkan pesan error yang informatif sebelum keluar
+            eprintln!("╔══════════════════════════════════════════════╗");
+            eprintln!("║         MELISA CONFIGURATION ERROR           ║");
+            eprintln!("╚══════════════════════════════════════════════╝");
+            eprintln!("");
+            eprintln!("  Error: Tidak dapat membaca '{}'", CONFIG_PATH);
+            eprintln!("  Alasan: {}", e);
+            eprintln!("");
+            eprintln!("  Solusi:");
+            eprintln!("    cp melisa.conf.example melisa.conf");
+            eprintln!("    # kemudian edit melisa.conf sesuai kebutuhan");
+            eprintln!("");
+            std::process::exit(1);
+        }
+    }
+});
 
 #[derive(Debug, Deserialize)]
 pub struct Config {

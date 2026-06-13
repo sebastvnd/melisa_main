@@ -29,14 +29,16 @@ pub async fn run_management_server() -> Result<(), Box<dyn std::error::Error + S
             handle_management_request(req)
         });
 
-        // Wrap tokio socket with hyper-util's TokioIo adapter
         let io = TokioIo::new(stream);
 
-        if let Err(err) = hyper::server::conn::http1::Builder::new()
-            .serve_connection(io, svc)
-            .await
-        {
-            let _ = LOGGER.log_debug(&format!("Management connection error: {:?}", err));
-        }
+        // FIXED: spawn task per koneksi agar concurrent
+        tokio::spawn(async move {
+            if let Err(err) = hyper::server::conn::http1::Builder::new()
+                .serve_connection(io, svc)
+                .await
+            {
+                let _ = LOGGER.log_debug(&format!("Management connection error: {:?}", err));
+            }
+        });
     }
 }

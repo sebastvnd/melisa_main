@@ -37,13 +37,15 @@ pub fn create_node(
 
     // Gunakan PID yang diberikan, atau generate virtual PID
     let final_pid = match pid {
-        Some(p) if (PID_START..=PID_END).contains(&p) => p,  // Valid PID
+        Some(p) if (PID_START..=PID_END).contains(&p) => p,
         Some(_) => {
-            // PID diberikan tapi di luar range, generate virtual
-            generate_virtual_pid(&format!("{}-{}", name, url))
+            // PID diberikan secara eksplisit tapi di luar range → tolak
+            return Err(NodeError::InvalidInput(
+                "pid out of allowed range".to_string(),
+            ));
         }
         None => {
-            // Tidak ada PID, generate dari identifier
+            // Tidak ada PID → generate virtual PID secara otomatis
             generate_virtual_pid(&format!("{}-{}", name, url))
         }
     };

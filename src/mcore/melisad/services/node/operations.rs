@@ -35,7 +35,7 @@ impl NodeManager {
 
         // Acquire write lock untuk update state
         let mut processes_lock = self.processes.write().unwrap();
-        let mut new_map = (*processes_lock.clone()).clone();
+        let mut new_map = (**processes_lock).clone();
 
         if new_map.contains_key(&hash) {
             return Err(NodeError::AlreadyExists);
@@ -77,7 +77,7 @@ impl NodeManager {
     /// Hapus node berdasarkan hash
     pub fn delete(&self, hash: &str) -> std::result::Result<(), NodeError> {
         let mut processes_lock = self.processes.write().unwrap();
-        let mut new_map = (*processes_lock.clone()).clone();
+        let mut new_map = (**processes_lock).clone();
 
         if new_map.remove(hash).is_some() {
             *processes_lock = std::sync::Arc::new(new_map);

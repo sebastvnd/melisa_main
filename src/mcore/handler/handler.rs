@@ -11,7 +11,9 @@ use uuid::Uuid;
 
 use crate::mcore::adapter::json::{ApiRequest, CreateNodeData, Action, api_create_node};
 use crate::mcore::melisad::services::node::NODE_MANAGER;
+use crate::mcore::api::services::delete_node;
 use crate::mcore::mlog::LOGGER;
+use crate::mcore::errors::enode::NodeError;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct RegisterNodeRequest {
@@ -123,17 +125,28 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
                 .unwrap())
         }
         Err(e) => {
-            let _ = LOGGER.log_error(&format!("Registration failed: {:?}", e));
-            let error_body = json!({
-                "success": false,
-                "message": format!("Failed to register node: {:?}", e)
-            });
-            Ok(Response::builder()
-                .status(StatusCode::CONFLICT)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap())
-        }
+        let _ = LOGGER.log_error(&format!("Registration failed: {:?}", e));
+
+        // Pilih HTTP status code berdasarkan tipe error
+        let status = match &e {
+            NodeError::AlreadyExists             => StatusCode::CONFLICT,           // 409
+            NodeError::InvalidInput(_)           => StatusCode::BAD_REQUEST,        // 400
+            NodeError::NotFound                  => StatusCode::NOT_FOUND,          // 404
+            NodeError::IoError(_)
+            | NodeError::JsonError(_)
+            | NodeError::FailedValidation(_)     => StatusCode::INTERNAL_SERVER_ERROR, // 500
+        };
+
+        let error_body = json!({
+            "success": false,
+            "message": format!("Failed to register node: {}", e)   // gunakan Display, bukan Debug
+        });
+        Ok(Response::builder()
+            .status(status)
+            .header("Content-Type", "application/json")
+            .body(Full::new(Bytes::from(error_body.to_string())))
+            .unwrap())
+    }
     }
 }
 
@@ -170,7 +183,7 @@ async fn handle_unregister_node(body: Bytes) -> Result<Response<Full<Bytes>>, hy
     };
 
     // Try to delete node
-    match NODE_MANAGER.delete(hash) {
+    match delete_node(hash) {
         Ok(_) => {
             let _ = LOGGER.log_info(&format!("Node unregistered: {}", hash));
             let response_body = json!({

@@ -218,7 +218,7 @@ pub async fn handle_proxy_request(
                         <p class=\"footer\">Melisa Proxy Gateway/0.1.0-beta &bull; Path: {} &bull; Request ID: {}</p>\n\
                     </body>\n\
                     </html>",
-                    path, request_id
+                    html_escape(&path), request_id
                 ),
             )
         };
@@ -244,4 +244,13 @@ pub async fn handle_proxy_request(
         );
         Ok(response)
     }
+}
+
+// Fungsi untuk escape karakter khusus di HTML (untuk mencegah XSS jika path mengandung karakter berbahaya)
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+     .replace('<', "&lt;")
+     .replace('>', "&gt;")
+     .replace('"', "&quot;")
+     .replace('\'', "&#x27;")
 }
