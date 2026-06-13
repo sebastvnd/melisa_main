@@ -1,3 +1,8 @@
 /target
 /mnode/target
 /doc
+
+melisa.conf
+nodes.json
+
+/mnode/mnode.conf

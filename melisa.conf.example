@@ -1,0 +1,86 @@
+# ============================================================================
+# Melisa Proxy Configuration
+# ============================================================================
+# Main configuration file untuk Melisa Proxy Gateway
+# Format: TOML
+
+# Proxy Server Configuration
+host = "127.0.0.1"
+port = 8080
+
+# ============================================================================
+# [management] - Node Management API Configuration
+# ============================================================================
+# Port khusus untuk add/delete node operations
+# JANGAN GANTI PORT INI - hanya untuk management API
+[management]
+port = 8888
+enabled = true
+
+# ============================================================================
+# [logging] - Nginx-style Logging Configuration
+# ============================================================================
+# Struktur log file akan tersimpan di folder yang ditentukan:
+# - access.log  : HTTP request/response logging
+# - error.log   : Error dan informasi level
+# - debug.log   : Debug messages (jika enabled)
+# - proxy.log   : Proxy-specific events dan metrics
+
+[logging]
+log_dir = "./logs"
+
+# Enable/disable log types
+access_log_enabled = true
+error_log_enabled = true
+proxy_log_enabled = true
+debug_log_enabled = false
+
+# Format untuk access log (Nginx-style):
+access_log_format = "$remote_addr - - [$time_local] \"$request\" $status $bytes_sent \"$http_referer\" \"$http_user_agent\" $request_time"
+
+# Max file size sebelum rotation (dalam MB)
+max_file_size_mb = 100
+
+# Jumlah backup file yang di-retain
+max_backups = 10
+
+# Flush interval ke disk (dalam milliseconds)
+flush_interval_ms = 10000
+
+# Log level: "debug", "info", "warn", "error"
+level = "info"
+
+# ============================================================================
+# [nodes] - Node Management Configuration
+# ============================================================================
+
+[nodes]
+# File penyimpanan node registry
+storage_file = "nodes.json"
+
+# Flush threshold (dalam bytes) sebelum auto-save
+flush_threshold_bytes = 51200  # 50 KB
+
+# Interval health-check node berkala (dalam seconds)
+health_check_interval_secs = 30
+
+# ============================================================================
+# [proxy] - Proxy Behavior Configuration
+# ============================================================================
+
+[proxy]
+# Load balancing strategy: "round_robin", "least_connections", "random"
+load_balancer_strategy = "round_robin"
+
+# Request timeout (dalam seconds)
+request_timeout_secs = 30
+
+# Max idle connections per host
+max_idle_per_host = 32
+
+# Retry configuration
+max_retries = 3
+retry_backoff_ms = 100
+
+# Metrics reporting interval (dalam seconds)
+metrics_report_interval_secs = 60
