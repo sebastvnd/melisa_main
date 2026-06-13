@@ -4,7 +4,7 @@ use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 
 use crate::mcore::config::load_config::CONFIG;
-use crate::mcore::melisad::management::handler::handle_management_request;
+use crate::mcore::handler::handler::handle_management_request;
 use crate::mcore::mlog::LOGGER;
 
 pub async fn run_management_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

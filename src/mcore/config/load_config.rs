@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::fs;
 
-use crate::mcore::melisad::services::mconf::CONFIG_PATH;
+use crate::mcore::melisad::mconf::CONFIG_PATH;
 use crate::mcore::mlog::config::LogConfig;
 use once_cell::sync::Lazy;
 

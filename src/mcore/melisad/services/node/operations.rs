@@ -1,8 +1,8 @@
 /// Node CRUD operations
 use crate::mcore::config::load_config::CONFIG;
 use crate::mcore::errors::enode::NodeError;
-use crate::mcore::melisad::services::hashing::generate_hash;
-use crate::mcore::melisad::services::mconf::{PID_END, PID_START};
+use crate::mcore::melisad::utils::hashing::generate_hash;
+use crate::mcore::melisad::mconf::{PID_END, PID_START};
 use crate::mcore::melisad::services::node::manager::NodeManager;
 use crate::mcore::melisad::services::node::models::{NodeProcess, NodeStatus};
 use std::sync::atomic::Ordering;

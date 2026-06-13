@@ -33,7 +33,10 @@ async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     let config = &*CONFIG;
     let node_count = NODE_MANAGER.list().map_or(0, |nodes| nodes.len());
 
-    println!("--- [MELISAD DAEMON STARTUP] ---");
+    println!("╔════════════════════════════════════════════╗");
+    println!("║                 MELISA CORE                ║");
+    println!("╚════════════════════════════════════════════╝");
+    println!();
     println!("Config: melisa.conf");
     println!("Listen: http://{}:{}", config.host, config.port);
     println!(

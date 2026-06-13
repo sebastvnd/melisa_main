@@ -126,3 +126,32 @@
 [2026/06/12 22:25:02] [ERROR] [REQ-f9eaad8e04a7479281e1731890b21be2] No route found for 127.0.0.1:8080/
 [2026/06/12 22:25:39] [ERROR] [REQ-b2e23954921a4eeb87a7bea2bace550e] No route found for 127.0.0.1:8080/
 [2026/06/12 22:25:54] [ERROR] [REQ-f96abf8f687846b0ae4bb7c3ee9a85a3] No route found for 127.0.0.1:8080/mnode
+[2026/06/12 22:41:39] [INFO] Melisa daemon startup
+[2026/06/12 22:41:39] [INFO] Node startup validation completed
+[2026/06/12 22:41:39] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:41:39] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:42:02] [INFO] Node registered via API: mnode-service at http://127.0.0.1:3000
+[2026/06/12 22:43:54] [INFO] Melisa daemon startup
+[2026/06/12 22:43:54] [INFO] Node startup validation completed
+[2026/06/12 22:43:54] [INFO] Melisa proxy listening on 127.0.0.1:8080
+[2026/06/12 22:43:54] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/12 22:44:00] [INFO] Node registered via API: mnode-service at http://127.0.0.1:3000
+[2026/06/13 06:11:15] [ERROR] [REQ-cdb1790d59f642608feeb8d77678be38] No route found for localhost:8080/
+[2026/06/13 06:11:15] [ERROR] [REQ-f8f0b493c6f4401a8515be8bf8b42711] No route found for localhost:8080/apple-touch-icon-precomposed.png
+[2026/06/13 06:11:15] [ERROR] [REQ-dc4ad7cefcb246bb97fd61f2372505f7] No route found for localhost:8080/favicon.ico
+[2026/06/13 06:11:15] [ERROR] [REQ-218c78a349c5423fbf47b9d7fa5c79dc] No route found for localhost:8080/apple-touch-icon.png
+[2026/06/13 06:11:15] [ERROR] [REQ-84f7bc17e5484c3b917880fa1da7154e] No route found for localhost:8080/favicon.ico
+[2026/06/13 06:11:22] [ERROR] [REQ-5afccb0704a744c49f803f02f97610fa] No route found for localhost:8080/
+[2026/06/13 06:11:24] [ERROR] [REQ-13d0add8de9f4c71ac2348034ec2b43c] No route found for localhost:8080/
+[2026/06/13 06:11:25] [ERROR] [REQ-908c3979da4844aab46db68b3834c80b] No route found for localhost:8080/
+[2026/06/13 06:11:25] [ERROR] [REQ-eea31624e3ab4296896187edb0757536] No route found for localhost:8080/
+[2026/06/13 06:11:25] [ERROR] [REQ-358384fa0ef343088400d106d6d085af] No route found for localhost:8080/
+[2026/06/13 06:11:26] [ERROR] [REQ-cad38d95d9da4ca7b17ffef945f0f521] No route found for localhost:8080/
+[2026/06/13 06:11:26] [ERROR] [REQ-23d1236d7d9d4dc9a7ee68b08c195c62] No route found for localhost:8080/
+[2026/06/13 06:11:26] [ERROR] [REQ-75d58c9c5cb348faba65f1a389ba4ecf] No route found for localhost:8080/
+[2026/06/13 06:11:26] [ERROR] [REQ-1a71765957794e93bdad0ab6cb38a8eb] No route found for localhost:8080/
+[2026/06/13 06:11:27] [ERROR] [REQ-03aee1c05cfa403c92bf50c0ce7413a0] No route found for localhost:8080/
+[2026/06/13 06:11:27] [ERROR] [REQ-acf40f3569e448daaac4bcf529c63762] No route found for localhost:8080/
+[2026/06/13 06:11:27] [ERROR] [REQ-0b9632c49ed44386b68f7cae0693e1fd] No route found for localhost:8080/
+[2026/06/13 06:11:27] [ERROR] [REQ-3cb89633e2014aa1b316d68b190b51eb] No route found for localhost:8080/
+[2026/06/13 06:11:28] [ERROR] [REQ-6a337af2cfc24d4f9d119667109d3804] No route found for localhost:8080/

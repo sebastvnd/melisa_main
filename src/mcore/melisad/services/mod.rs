@@ -1,6 +1,3 @@
-pub mod hashing;
-pub mod mconf; // konfigurasi penting untuk demon program
-
 // Node module - explicitly load from node/ subdirectory
 // by using inline module declaration instead of `pub mod node;`
 pub mod node {
