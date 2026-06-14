@@ -1,6 +1,6 @@
 /// Logger utama dengan buffering dan rotation
 use crate::mcore::config::load_config::CONFIG;
-use crate::mcore::mlog::config::LogConfig;
+use crate::mcore::mlog::log_config::LogConfig;
 use crate::mcore::mlog::rotation::LogRotator;
 use chrono::Local;
 use std::fs::OpenOptions;

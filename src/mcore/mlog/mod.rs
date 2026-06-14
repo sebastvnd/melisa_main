@@ -7,7 +7,7 @@
 /// - Automatic log rotation
 /// - Configurable log levels
 /// - Buffered writing for performance
-pub mod config;
+pub mod log_config;
 pub mod logger;
 pub mod rotation;
 

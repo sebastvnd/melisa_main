@@ -1,9 +1,20 @@
 use serde::Deserialize;
 use std::fs;
 
-use crate::mcore::melisad::mconf::CONFIG_PATH;
-use crate::mcore::mlog::config::LogConfig;
+use crate::mcore::mlog::log_config::LogConfig;
 use once_cell::sync::Lazy;
+
+// const variabels
+pub const NODE_FILE: &str = "nodes.json"; // berisi daftar node
+
+// batasan pid untuk node yang valid
+pub const PID_START: u32 = 100_000;
+pub const PID_END: u32 = 999_999;
+
+pub const HASH_LENGTH: usize = 64; // panjang hash
+
+// Salin melisa.conf.example ke melisa.conf jika tidak ada
+pub const CONFIG_PATH: &str = "melisa.conf"; // file konfigurasi
 
 pub static CONFIG: Lazy<Config> = Lazy::new(|| {
     match Config::from_file(CONFIG_PATH) {
@@ -119,7 +130,7 @@ impl Default for ManagementConfig {
 }
 
 fn default_storage_file() -> String {
-    "nodes.json".to_string()
+    NODE_FILE.to_string()
 }
 
 fn default_flush_threshold() -> u64 {

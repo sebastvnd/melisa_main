@@ -1,7 +1,10 @@
+//! 
 //! # Melisa Project
 //!
 //! An open server architecture inspired by Pingora/Nginx, fully written in Rust.
-//!
+//! This just a ekperimental project from indonesian student not same with a profesional
+//! project like Nginx or Pingora.
+//! 
 //! - **Version:** 0.1.0-beta
 //! - **License:** MIT
 

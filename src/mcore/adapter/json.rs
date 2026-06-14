@@ -56,7 +56,7 @@ pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::mcore::melisad::mconf::NODE_FILE;
+    use crate::mcore::config::load_config::NODE_FILE;
     use crate::mcore::melisad::services::node::NODE_MANAGER;
     use once_cell::sync::Lazy;
     use std::fs;
