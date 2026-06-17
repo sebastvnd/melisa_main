@@ -163,3 +163,13 @@
 [2026/06/17 22:16:02] [INFO] Node startup validation completed
 [2026/06/17 22:16:02] [INFO] Melisa proxy listening on 127.0.0.1:8083
 [2026/06/17 22:16:02] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/18 05:48:55] [INFO] Melisa daemon startup
+[2026/06/18 05:48:55] [INFO] Node startup validation completed
+[2026/06/18 05:48:55] [INFO] Melisa proxy listening on 127.0.0.1:8083
+[2026/06/18 05:48:55] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/18 05:49:27] [INFO] Node registered via API: mnode-service at http://127.0.0.1:3000
+[2026/06/18 05:51:00] [ERROR] [REQ-4dd338ed434f4e928b93e2a36a56475e] No active nodes available in the framework for melisa:8083/api/health
+[2026/06/18 05:51:19] [ERROR] Registration failed: AlreadyExists
+[2026/06/18 05:51:24] [ERROR] Registration failed: AlreadyExists
+[2026/06/18 05:52:00] [ERROR] [REQ-a917346ddd174b6aba6842ed6c074879] No active nodes available in the framework for melisa:8083/api/health
+[2026/06/18 05:52:30] [ERROR] [REQ-1a7fff1d92904f4592f7444dc6e75dc2] No active nodes available in the framework for melisa:8083/api/health

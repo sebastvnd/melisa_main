@@ -36,38 +36,44 @@ pub async fn handle_request(
 }
 
 /// Serve static files dari configured directory
+// mnode/src/handler.rs
+
 fn serve_static_file(path: &str, config: &NodeConfig) -> Result<Response<Full<Bytes>>, String> {
-    // Normalize path - remove leading slash
     let file_path = if path == "/" {
         "index.html".to_string()
     } else {
         path.trim_start_matches('/').to_string()
     };
 
-    // Security: prevent directory traversal
-    if file_path.contains("..") || file_path.contains("//") {
-        return Err("Invalid path".to_string());
+    // 1. Dapatkan path absolut dari direktori dasar (public/html)
+    let base_dir = std::fs::canonicalize(&config.static_files_dir)
+        .map_err(|e| format!("Base directory error: {}", e))?;
+
+    // 2. Gabungkan path dasar dengan file yang diminta klien
+    let full_path = base_dir.join(&file_path);
+
+    // 3. Lakukan canonicalize pada target file untuk menyelesaikan ".." atau symlink asli
+    let canonical_target = match std::fs::canonicalize(&full_path) {
+        Ok(p) => p,
+        Err(_) => return Err("File tidak ditemukan".to_string()),
+    };
+
+    // 4. VALIDASI UTAMA: Pastikan file target berada di dalam base_dir
+    if !canonical_target.starts_with(&base_dir) {
+        return Err("Akses Ditolak: Deteksi Directory Traversal!".to_string()); // Blokir jika keluar folder!
     }
 
-    // Construct full path
-    let full_path = PathBuf::from(&config.static_files_dir).join(&file_path);
-
-    // Check if file exists
-    if !full_path.exists() {
-        return Err("File not found".to_string());
-    }
-
-    // Only serve files, not directories
-    if !full_path.is_file() {
-        return Err("Not a file".to_string());
+    // 5. Pastikan yang diakses adalah file, bukan direktori
+    if !canonical_target.is_file() {
+        return Err("Bukan sebuah file".to_string());
     }
 
     // Read file content
-    let content = fs::read(&full_path)
-        .map_err(|e| format!("Failed to read file: {}", e))?;
+    let content = fs::read(&canonical_target)
+        .map_err(|e| format!("Gagal membaca file: {}", e))?;
 
     // Guess MIME type
-    let mime_type = mime_guess::from_path(&full_path)
+    let mime_type = mime_guess::from_path(&canonical_target)
         .first_raw()
         .unwrap_or("application/octet-stream");
 

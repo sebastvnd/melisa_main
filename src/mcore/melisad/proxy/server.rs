@@ -47,6 +47,9 @@ pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send +
     let metrics = Arc::new(ProxyMetrics::new());
     let metrics_clone = metrics.clone();
 
+    // TODO PINDAHIN INI KE CONFIG
+    const MAX_CONCURRENT_CONNECTIONS: usize = 10000; // Tentukan batas aman
+
     // Spawn metrics reporter
     tokio::spawn(async move {
         loop {
@@ -62,6 +65,19 @@ pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send +
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         let peer_addr = peer_addr.to_string();
+
+        // --- MITIGASI DOS: PEMBATASAN KONEKSI KONTEMPORER ---
+        let current_active = metrics
+            .active_connections
+            .load(std::sync::atomic::Ordering::Relaxed);
+        if current_active >= MAX_CONCURRENT_CONNECTIONS {
+            let _ = LOGGER.log_error(&format!(
+                "DoS Protection: Dropping connection from {} due to high load",
+                peer_addr
+            ));
+            continue; // Tolak koneksi baru secara instan jika server penuh
+        }
+        // ---------------------------------------------------
 
         metrics.increment_active();
         let metrics_clone = metrics.clone();

@@ -4,6 +4,8 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
+pub const SECRET_MANAGEMENT_TOKEN: &str = "DEFAULT_SECRET_NODE_TOKEN";
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NodeConfig {
     pub name: String,           // ← Node name for registration

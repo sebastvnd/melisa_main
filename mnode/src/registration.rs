@@ -1,25 +1,25 @@
 /// Auto-registration dengan Melisa Management API
 /// MNode mendaftar diri ke Melisa management API untuk menjadi bagian dari network
 use serde_json::json;
-use crate::config::NodeConfig;
+use crate::config::{NodeConfig, SECRET_MANAGEMENT_TOKEN};
 
 pub async fn register_with_melisa(config: &NodeConfig) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let melisa_url = config.melisa_url();
     
-    // Prepare registration data
-    // NOTE: pid is optional - management API will generate virtual PID if not provided
     let register_data = json!({
-        "name": config.name,       // ← Use node name, not route_path
-        // "pid": Not sending OS PID - let management API generate virtual PID
+        "name": config.name,
         "url": config.node_url(),
         "domain": config.domain,
         "route_path": config.route_path,
     });
 
-    // Send registration request
+    // Send registration request dengan Header Authorization
     let response = client
         .post(format!("{}/register", melisa_url))
+
+        // TODO PINDAHIN INI KE CONFIG
+        .header("Authorization", format!("{}", SECRET_MANAGEMENT_TOKEN))
         .json(&register_data)
         .send()
         .await?;

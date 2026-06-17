@@ -5,6 +5,8 @@
 //! This just a ekperimental project from indonesian student not same with a profesional
 //! project like Nginx or Pingora.
 //!
+//! Copyright (c) 2026 sebastvn.d
+//!
 //! - **Version:** 0.1.0-beta
 //! - **License:** MIT
 
@@ -32,6 +34,7 @@ async fn main() {
     }
 }
 
+// TODO melisad belum bisa mendeteksi mana node yang masih aktif
 async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     let config = &*CONFIG;
     let node_count = NODE_MANAGER.list().map_or(0, |nodes| nodes.len());
@@ -40,11 +43,10 @@ async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     println!("╔════════════════════════════════════════════╗");
     println!("║                MELISA CORE                 ║");
     println!("║════════════════════════════════════════════╝");
-    println!("║");
     println!("║  melisa version {}", VERSION);
     println!("║  open server arsitecture");
+    println!("║  Copyright (c) 2026 sebastvn.d");
     println!("╚════════════════════════════════════════════╝");
-    println!();
     println!();
     println!("  Config: melisa.conf");
     println!("  Listen: http://{}:{}", config.host, config.port);

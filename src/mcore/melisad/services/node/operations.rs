@@ -41,6 +41,26 @@ impl NodeManager {
             return Err(NodeError::AlreadyExists);
         }
 
+        // TODO APAKAH INI DAPAT MEMBATASI NODE YANG MEMILIKI RUTE
+        // YANG SAMA APAKAH 1 NODE HANYA DAPAT MENGKLAIM 1 RUTE ATAU BISA MULTIPLE
+        // NODE DENGAN RUTE YANG TUMPAK TINDIHAN
+
+        // --- TAMBAHKAN VALIDASI ANTI-HIJACKING ---
+        // Cek apakah kombinasi domain + rute ini sudah diklaim oleh node lain
+        let is_route_conflict = new_map.values().any(|existing_node| {
+            existing_node.domain == domain
+                && (existing_node.route_path == route_path
+                    || route_path.starts_with(&existing_node.route_path))
+        });
+
+        if is_route_conflict {
+            return Err(NodeError::InvalidInput(
+                "Route hijacking detected: Domain and route path already claimed by another node"
+                    .to_string(),
+            ));
+        }
+        // -----------------------------------------
+
         let node = NodeProcess {
             hash: hash.clone(),
             name: name.to_string(),

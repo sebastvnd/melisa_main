@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 use crate::mcore::adapter::json::{Action, ApiRequest, CreateNodeData, api_create_node};
 use crate::mcore::api::services::delete_node;
+use crate::mcore::config::load_config::SECRET_MANAGEMENT_TOKEN;
 use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::NODE_MANAGER;
 use crate::mcore::mlog::LOGGER;
@@ -36,6 +37,29 @@ pub async fn handle_management_request(
     req: Request<Incoming>,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let (parts, body) = req.into_parts();
+
+    // --- TAMBAHKAN PROTEKSI AUTENTIKASI ---
+    let mut authenticated = false;
+    if let Some(auth_header) = parts.headers.get(hyper::header::AUTHORIZATION)
+        && let Ok(auth_str) = auth_header.to_str()
+        && auth_str == SECRET_MANAGEMENT_TOKEN
+    {
+        authenticated = true;
+    }
+
+    if !authenticated {
+        let error_body = serde_json::json!({
+            "success": false,
+            "message": "Unauthorized: Invalid or missing management token"
+        });
+        return Ok(Response::builder()
+            .status(hyper::StatusCode::UNAUTHORIZED) // 401 Unauthorized
+            .header("Content-Type", "application/json")
+            .body(Full::new(Bytes::from(error_body.to_string())))
+            .unwrap());
+    }
+    // --------------------------------------
+
     let method = parts.method.clone();
     let path = parts.uri.path().to_string();
     let body_bytes = body.collect().await?.to_bytes();

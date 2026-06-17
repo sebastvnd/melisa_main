@@ -16,6 +16,8 @@ pub const VERSION: &str = "0.1.0"; // versi melisa
 
 pub const HASH_LENGTH: usize = 64; // panjang hash
 
+pub const SECRET_MANAGEMENT_TOKEN: &str = "DEFAULT_SECRET_NODE_TOKEN";
+
 // Salin melisa.conf.example ke melisa.conf jika tidak ada
 pub const CONFIG_PATH: &str = "melisa.conf"; // file konfigurasi
 
