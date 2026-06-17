@@ -1,7 +1,8 @@
 use serde::Deserialize;
 use std::fs;
 
-use crate::mcore::mlog::log_config::LogConfig;
+use crate::mcore::errors::econfig::ConfigError;
+use crate::mcore::mlog::{LOGGER, log_config::LogConfig};
 use once_cell::sync::Lazy;
 
 // const variabels
@@ -11,29 +12,34 @@ pub const NODE_FILE: &str = "nodes.json"; // berisi daftar node
 pub const PID_START: u32 = 100_000;
 pub const PID_END: u32 = 999_999;
 
+pub const VERSION: &str = "0.1.0"; // versi melisa
+
 pub const HASH_LENGTH: usize = 64; // panjang hash
 
 // Salin melisa.conf.example ke melisa.conf jika tidak ada
 pub const CONFIG_PATH: &str = "melisa.conf"; // file konfigurasi
 
-pub static CONFIG: Lazy<Config> = Lazy::new(|| {
-    match Config::from_file(CONFIG_PATH) {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            // Tampilkan pesan error yang informatif sebelum keluar
-            eprintln!("╔══════════════════════════════════════════════╗");
-            eprintln!("║         MELISA CONFIGURATION ERROR           ║");
-            eprintln!("╚══════════════════════════════════════════════╝");
-            eprintln!("");
-            eprintln!("  Error: Tidak dapat membaca '{}'", CONFIG_PATH);
-            eprintln!("  Alasan: {}", e);
-            eprintln!("");
-            eprintln!("  Solusi:");
-            eprintln!("    cp melisa.conf.example melisa.conf");
-            eprintln!("    # kemudian edit melisa.conf sesuai kebutuhan");
-            eprintln!("");
-            std::process::exit(1);
-        }
+pub static CONFIG: Lazy<Config> = Lazy::new(|| match Config::from_file(CONFIG_PATH) {
+    Ok(cfg) => cfg,
+    Err(e) => {
+        eprintln!("╔══════════════════════════════════════════════╗");
+        eprintln!("║         MELISA CONFIGURATION ERROR           ║");
+        eprintln!("╚══════════════════════════════════════════════╝");
+        eprintln!();
+        eprintln!("  Error: Cannot read config file '{}'", CONFIG_PATH);
+        eprintln!("  Melisa version {}", VERSION);
+        eprintln!("  > {}", e);
+        eprintln!();
+        eprintln!("  README:");
+        eprintln!("    cp melisa.conf.example melisa.conf");
+        eprintln!("    # and edit melisa.conf up to you");
+        eprintln!();
+
+        let _ = LOGGER.log_error(&format!(
+            "{}",
+            ConfigError::FileNotFound("melisa.conf".to_string())
+        ));
+        std::process::exit(1);
     }
 });
 

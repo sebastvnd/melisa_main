@@ -208,7 +208,8 @@ impl Logger {
 
     /// Log proxy-specific events
     pub fn log_proxy(&self, msg: &str) -> std::io::Result<()> {
-        if !self.config.proxy_log_enabled {  // ✅ Hormati config
+        if !self.config.proxy_log_enabled {
+            // ✅ Hormati config
             return Ok(());
         }
         let timestamp = Local::now().format("%Y/%m/%d %H:%M:%S%.3f").to_string();
@@ -237,7 +238,7 @@ impl Logger {
                 self.write_to_file(&self.config.debug_log_path(), &line)?;
                 self.debug_rotator.check_and_rotate()?;
             }
-            // ✅ TAMBAHKAN: INFO dan WARN ke error.log (konvensi Nginx)
+
             for line in buffer.info_logs.drain(..) {
                 self.write_to_file(&self.config.error_log_path(), &line)?;
                 self.error_rotator.check_and_rotate()?;
@@ -246,7 +247,7 @@ impl Logger {
                 self.write_to_file(&self.config.error_log_path(), &line)?;
                 self.error_rotator.check_and_rotate()?;
             }
-            // ✅ TAMBAHKAN: proxy logs ke proxy.log
+
             for line in buffer.proxy_logs.drain(..) {
                 self.write_to_file(&self.config.proxy_log_path(), &line)?;
                 self.proxy_rotator.check_and_rotate()?;

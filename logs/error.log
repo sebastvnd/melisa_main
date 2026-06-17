@@ -155,3 +155,11 @@
 [2026/06/13 06:11:27] [ERROR] [REQ-0b9632c49ed44386b68f7cae0693e1fd] No route found for localhost:8080/
 [2026/06/13 06:11:27] [ERROR] [REQ-3cb89633e2014aa1b316d68b190b51eb] No route found for localhost:8080/
 [2026/06/13 06:11:28] [ERROR] [REQ-6a337af2cfc24d4f9d119667109d3804] No route found for localhost:8080/
+[2026/06/17 22:12:57] [INFO] Melisa daemon startup
+[2026/06/17 22:12:57] [INFO] Node startup validation completed
+[2026/06/17 22:12:57] [INFO] Melisa proxy listening on 127.0.0.1:8083
+[2026/06/17 22:12:57] [INFO] Management API listening on 127.0.0.1:8888
+[2026/06/17 22:16:02] [INFO] Melisa daemon startup
+[2026/06/17 22:16:02] [INFO] Node startup validation completed
+[2026/06/17 22:16:02] [INFO] Melisa proxy listening on 127.0.0.1:8083
+[2026/06/17 22:16:02] [INFO] Management API listening on 127.0.0.1:8888

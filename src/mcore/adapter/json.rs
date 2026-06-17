@@ -24,7 +24,7 @@ pub struct ApiResponse<T> {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNodeData {
     pub name: String,
-    #[serde(default)]  // Make pid optional - will be generated if not provided
+    #[serde(default)] // Make pid optional - will be generated if not provided
     pub pid: Option<u32>,
     pub url: String,
     pub domain: String,
@@ -42,7 +42,7 @@ pub enum Action {
 pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
     create_node(
         &request.data.name,
-        request.data.pid,  // Optional - API service will generate if needed
+        request.data.pid, // Optional - API service will generate if needed
         &request.data.url,
         &request.data.domain,
         &request.data.route_path,

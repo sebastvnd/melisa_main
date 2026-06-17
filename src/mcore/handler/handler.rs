@@ -1,25 +1,25 @@
+use chrono::Utc;
+use http_body_util::{BodyExt, Full};
+use hyper::body::Bytes;
 /// Management API Handler - handle register/unregister node requests
 /// Alur data:
 /// HTTP request → handler (parsing) → adapter (format) → api/services (logic) → melisad (NODE_MANAGER)
 use hyper::body::Incoming;
 use hyper::{Request, Response, StatusCode};
-use http_body_util::{BodyExt, Full};
-use hyper::body::Bytes;
-use serde_json::{json, Value};
-use chrono::Utc;
+use serde_json::{Value, json};
 use uuid::Uuid;
 
-use crate::mcore::adapter::json::{ApiRequest, CreateNodeData, Action, api_create_node};
-use crate::mcore::melisad::services::node::NODE_MANAGER;
+use crate::mcore::adapter::json::{Action, ApiRequest, CreateNodeData, api_create_node};
 use crate::mcore::api::services::delete_node;
-use crate::mcore::mlog::LOGGER;
 use crate::mcore::errors::enode::NodeError;
+use crate::mcore::melisad::services::node::NODE_MANAGER;
+use crate::mcore::mlog::LOGGER;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct RegisterNodeRequest {
     pub name: String,
     #[serde(default)]
-    pub pid: Option<u32>,  // Optional - will be generated in API layer
+    pub pid: Option<u32>, // Optional - will be generated in API layer
     pub url: String,
     pub domain: String,
     pub route_path: String,
@@ -60,7 +60,10 @@ pub async fn handle_management_request(
     response
 }
 
-fn build_response(status: StatusCode, body: serde_json::Value) -> Result<Response<Full<Bytes>>, hyper::http::Error> {
+fn build_response(
+    status: StatusCode,
+    body: serde_json::Value,
+) -> Result<Response<Full<Bytes>>, hyper::http::Error> {
     Response::builder()
         .status(status)
         .header("Content-Type", "application/json")
@@ -125,28 +128,28 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
                 .unwrap())
         }
         Err(e) => {
-        let _ = LOGGER.log_error(&format!("Registration failed: {:?}", e));
+            let _ = LOGGER.log_error(&format!("Registration failed: {:?}", e));
 
-        // Pilih HTTP status code berdasarkan tipe error
-        let status = match &e {
-            NodeError::AlreadyExists             => StatusCode::CONFLICT,           // 409
-            NodeError::InvalidInput(_)           => StatusCode::BAD_REQUEST,        // 400
-            NodeError::NotFound                  => StatusCode::NOT_FOUND,          // 404
-            NodeError::IoError(_)
-            | NodeError::JsonError(_)
-            | NodeError::FailedValidation(_)     => StatusCode::INTERNAL_SERVER_ERROR, // 500
-        };
+            // Pilih HTTP status code berdasarkan tipe error
+            let status = match &e {
+                NodeError::AlreadyExists => StatusCode::CONFLICT, // 409
+                NodeError::InvalidInput(_) => StatusCode::BAD_REQUEST, // 400
+                NodeError::NotFound => StatusCode::NOT_FOUND,     // 404
+                NodeError::IoError(_)
+                | NodeError::JsonError(_)
+                | NodeError::FailedValidation(_) => StatusCode::INTERNAL_SERVER_ERROR, // 500
+            };
 
-        let error_body = json!({
-            "success": false,
-            "message": format!("Failed to register node: {}", e)   // gunakan Display, bukan Debug
-        });
-        Ok(Response::builder()
-            .status(status)
-            .header("Content-Type", "application/json")
-            .body(Full::new(Bytes::from(error_body.to_string())))
-            .unwrap())
-    }
+            let error_body = json!({
+                "success": false,
+                "message": format!("Failed to register node: {}", e)   // gunakan Display, bukan Debug
+            });
+            Ok(Response::builder()
+                .status(status)
+                .header("Content-Type", "application/json")
+                .body(Full::new(Bytes::from(error_body.to_string())))
+                .unwrap())
+        }
     }
 }
 

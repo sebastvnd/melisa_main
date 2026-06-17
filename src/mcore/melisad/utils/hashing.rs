@@ -9,15 +9,15 @@ pub fn generate_hash(input: &str) -> String {
     result.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
- #[cfg(test)]
+#[cfg(test)]
 mod hashing_tests {
-    use crate::mcore::melisad::utils::hashing::generate_hash;
     use crate::mcore::config::load_config::HASH_LENGTH;
- 
+    use crate::mcore::melisad::utils::hashing::generate_hash;
+
     // -----------------------------------------------------------------
     // 1. Panjang output
     // -----------------------------------------------------------------
- 
+
     /// Hash harus selalu menghasilkan hex string sepanjang 64 karakter (SHA-256)
     #[test]
     fn test_hash_length_is_64() {
@@ -35,11 +35,11 @@ mod hashing_tests {
             );
         }
     }
- 
+
     // -----------------------------------------------------------------
     // 2. Determinisme
     // -----------------------------------------------------------------
- 
+
     /// Input yang sama harus selalu menghasilkan hash yang sama (idempoten)
     #[test]
     fn test_hash_is_deterministic() {
@@ -48,7 +48,7 @@ mod hashing_tests {
         let h2 = generate_hash(input);
         assert_eq!(h1, h2, "Hash harus deterministik untuk input yang sama");
     }
- 
+
     /// Memanggil generate_hash berkali-kali menghasilkan hasil konsisten
     #[test]
     fn test_hash_repeated_calls_same_result() {
@@ -59,11 +59,11 @@ mod hashing_tests {
             assert_eq!(first, r, "Panggilan ke-{} menghasilkan hash berbeda", i);
         }
     }
- 
+
     // -----------------------------------------------------------------
     // 3. Sensitivitas terhadap perbedaan input
     // -----------------------------------------------------------------
- 
+
     /// Input berbeda harus menghasilkan hash yang berbeda (collision resistance dasar)
     #[test]
     fn test_different_inputs_produce_different_hashes() {
@@ -84,7 +84,7 @@ mod hashing_tests {
             );
         }
     }
- 
+
     /// Case-sensitif: "Node" != "node"
     #[test]
     fn test_hash_is_case_sensitive() {
@@ -94,26 +94,27 @@ mod hashing_tests {
             "generate_hash harus case-sensitive"
         );
     }
- 
+
     // -----------------------------------------------------------------
     // 4. Format output
     // -----------------------------------------------------------------
- 
+
     /// Output harus berupa lowercase hexadecimal
     #[test]
     fn test_hash_output_is_lowercase_hex() {
         let h = generate_hash("format-test");
         assert!(
-            h.chars().all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()),
+            h.chars()
+                .all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()),
             "Hash harus berupa lowercase hex, dapat: {}",
             h
         );
     }
- 
+
     // -----------------------------------------------------------------
     // 5. Edge cases
     // -----------------------------------------------------------------
- 
+
     /// String kosong harus tetap menghasilkan hash valid (SHA-256 of empty string)
     #[test]
     fn test_hash_empty_string() {
@@ -125,7 +126,7 @@ mod hashing_tests {
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         );
     }
- 
+
     /// String panjang harus tetap berjalan dengan baik
     #[test]
     fn test_hash_very_long_input() {
@@ -133,7 +134,7 @@ mod hashing_tests {
         let h = generate_hash(&long_input);
         assert_eq!(h.len(), HASH_LENGTH);
     }
- 
+
     /// Unicode / non-ASCII harus ditangani tanpa panic
     #[test]
     fn test_hash_unicode_input() {
@@ -143,18 +144,18 @@ mod hashing_tests {
             assert_eq!(h.len(), HASH_LENGTH, "Unicode input {:?} gagal", input);
         }
     }
- 
+
     /// Newline dan whitespace dalam string harus diperhitungkan
     #[test]
     fn test_hash_whitespace_sensitivity() {
         assert_ne!(generate_hash("ab"), generate_hash("a b"));
         assert_ne!(generate_hash("ab"), generate_hash("ab\n"));
     }
- 
+
     // -----------------------------------------------------------------
     // 6. Known-value test (SHA-256 regression)
     // -----------------------------------------------------------------
- 
+
     /// Verifikasi nilai SHA-256 yang dikenal untuk string "test"
     #[test]
     fn test_known_sha256_value_for_test() {
@@ -165,7 +166,7 @@ mod hashing_tests {
             "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
         );
     }
- 
+
     /// Verifikasi SHA-256 untuk string "melisa"
     #[test]
     fn test_known_sha256_value_for_melisa() {

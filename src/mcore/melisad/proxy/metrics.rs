@@ -49,11 +49,11 @@ impl ProxyMetrics {
     }
 
     pub fn decrement_active(&self) {
-    // Gunakan fetch_update dengan saturating_sub untuk cegah underflow
-    self.active_connections
-        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
-            Some(v.saturating_sub(1))
-        })
-        .ok(); // Abaikan error (tidak akan terjadi karena closure selalu Some)
-}
+        // Gunakan fetch_update dengan saturating_sub untuk cegah underflow
+        self.active_connections
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |v| {
+                Some(v.saturating_sub(1))
+            })
+            .ok(); // Abaikan error (tidak akan terjadi karena closure selalu Some)
+    }
 }

@@ -2,8 +2,8 @@
 // API Layer - Business logic untuk node management
 // Alur: HTTP request → adapter (format) → api/services (logic) → melisad (operations)
 
-use crate::mcore::errors::enode::NodeError;
 use crate::mcore::config::load_config::{PID_END, PID_START};
+use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::{NODE_MANAGER, NodeProcess};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -14,7 +14,7 @@ pub fn generate_virtual_pid(node_identifier: &str) -> u32 {
     let mut hasher = DefaultHasher::new();
     node_identifier.hash(&mut hasher);
     let hash_value = hasher.finish();
-    
+
     // Map ke range PID_START..=PID_END (100k - 999k)
     let range_size = (PID_END - PID_START + 1) as u64;
     let virtual_pid = PID_START as u64 + (hash_value % range_size);
@@ -25,7 +25,7 @@ pub fn generate_virtual_pid(node_identifier: &str) -> u32 {
 /// Alur data: incoming request → validation → NODE_MANAGER.create() → return NodeProcess
 pub fn create_node(
     name: &str,
-    pid: Option<u32>,  // Optional - generate jika tidak ada
+    pid: Option<u32>, // Optional - generate jika tidak ada
     url: &str,
     domain: &str,
     route_path: &str,

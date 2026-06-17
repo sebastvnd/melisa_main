@@ -74,7 +74,6 @@ impl LoadBalancer {
 
             //     selected_node
             // }
-
             LoadBalancingStrategy::Random => {
                 if matching_nodes.is_empty() {
                     return None;

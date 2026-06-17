@@ -25,9 +25,7 @@ pub async fn run_management_server() -> Result<(), Box<dyn std::error::Error + S
     loop {
         let (stream, _peer_addr) = listener.accept().await?;
 
-        let svc = service_fn(|req| {
-            handle_management_request(req)
-        });
+        let svc = service_fn(|req| handle_management_request(req));
 
         let io = TokioIo::new(stream);
 

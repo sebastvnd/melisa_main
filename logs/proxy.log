@@ -507,3 +507,5 @@
 [2026/06/13 06:59:56.486] Metrics - Total Requests: 588, Errors: 19, Bytes Forwarded: 0 MB, Active: 1
 [2026/06/13 07:00:56.489] Metrics - Total Requests: 589, Errors: 19, Bytes Forwarded: 0 MB, Active: 1
 [2026/06/13 07:01:56.494] Metrics - Total Requests: 590, Errors: 19, Bytes Forwarded: 0 MB, Active: 1
+[2026/06/17 22:13:57.828] Metrics - Total Requests: 0, Errors: 0, Bytes Forwarded: 0 MB, Active: 0
+[2026/06/17 22:17:02.169] Metrics - Total Requests: 0, Errors: 0, Bytes Forwarded: 0 MB, Active: 0

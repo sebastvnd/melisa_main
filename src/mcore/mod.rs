@@ -1,5 +1,4 @@
-
-// melisa core 
+// melisa core
 
 // STANDART DATE FLOW MCORE
 // adapter -> api -> melisad
