@@ -1,10 +1,1 @@
-{
-  "add7de5beae7b0fec0289eec51bd9ee16271bfa16dcfb5fef337e93c97878c7a": {
-    "name": "mnode-service",
-    "pid": 206274,
-    "url": "http://127.0.0.1:3000",
-    "domain": "melisa",
-    "route_path": "/",
-    "status": "Stopped"
-  }
-}
+{}

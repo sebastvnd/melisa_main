@@ -8,7 +8,7 @@ use crate::mcore::melisad::utils::hashing::generate_hash;
 use std::sync::atomic::Ordering;
 
 impl NodeManager {
-    /// Buat node baru dengan nama, pid, url, domain, dan route path
+    /// Buat node baru dengan nama, pid, url, domain, dan route path (Menggunakan metadata default)
     pub fn create(
         &self,
         name: &str,
@@ -16,6 +16,29 @@ impl NodeManager {
         url: &str,
         domain: &str,
         route_path: &str,
+    ) -> std::result::Result<NodeProcess, NodeError> {
+        // Meneruskan langsung ke create_with_metadata dengan default IP dan versi
+        self.create_with_metadata(
+            name,
+            pid,
+            url,
+            domain,
+            route_path,
+            "127.0.0.1", // Default IP audit trail
+            "0.1.0",     // Default fallback version
+        )
+    }
+
+    /// Buat node baru dengan menyertakan extended metadata (IP registrant & Versi MNode)
+    pub fn create_with_metadata(
+        &self,
+        name: &str,
+        pid: u32,
+        url: &str,
+        domain: &str,
+        route_path: &str,
+        registered_from_ip: &str,
+        version: &str,
     ) -> std::result::Result<NodeProcess, NodeError> {
         let name = name.trim();
         if name.is_empty() {
@@ -41,35 +64,32 @@ impl NodeManager {
             return Err(NodeError::AlreadyExists);
         }
 
-        // TODO APAKAH INI DAPAT MEMBATASI NODE YANG MEMILIKI RUTE
-        // YANG SAMA APAKAH 1 NODE HANYA DAPAT MENGKLAIM 1 RUTE ATAU BISA MULTIPLE
-        // NODE DENGAN RUTE YANG TUMPAK TINDIHAN
-
-        // --- TAMBAHKAN VALIDASI ANTI-HIJACKING ---
-        // Cek apakah kombinasi domain + rute ini sudah diklaim oleh node lain
-        let is_route_conflict = new_map.values().any(|existing_node| {
-            existing_node.domain == domain
-                && (existing_node.route_path == route_path
-                    || route_path.starts_with(&existing_node.route_path))
+        // --- REVISI VALIDASI ANTI-HIJACKING ---
+        // Di sini kita MEMPERBOLEHKAN rute tumpang tindih untuk kebutuhan Load Balancing & Sub-routes.
+        let is_invalid_override = new_map.values().any(|existing_node| {
+            existing_node.domain == domain 
+                && existing_node.route_path == route_path 
+                && existing_node.name != name 
+                && existing_node.url == url
         });
 
-        if is_route_conflict {
+        if is_invalid_override {
             return Err(NodeError::InvalidInput(
-                "Route hijacking detected: Domain and route path already claimed by another node"
+                "Duplicate Node Deployment: Identical upstream URL and route path already registered by another node group."
                     .to_string(),
             ));
         }
-        // -----------------------------------------
 
-        let node = NodeProcess {
-            hash: hash.clone(),
-            name: name.to_string(),
-            pid,
+        // PANGGIL CONSTRUCTOR BARU: Otomatis menginisialisasi timestamps & metrics tracker
+        let node = NodeProcess::new(
+            name.to_string(),
+            hash.clone(),
             url,
             domain,
             route_path,
-            status: NodeStatus::Active,
-        };
+            registered_from_ip.to_string(),
+            version.to_string(),
+        );
 
         // Insert ke map baru
         new_map.insert(hash, node.clone());
@@ -118,7 +138,6 @@ impl NodeManager {
 
     /// List semua node hashes yang registered
     pub fn list(&self) -> Option<Vec<String>> {
-        // Clone Arc pointer dengan cepat, lepas read lock immediately
         let snapshot = {
             let processes_lock = self.processes.read().unwrap();
             processes_lock.clone()
@@ -201,20 +220,13 @@ mod operations_tests {
     use crate::mcore::melisad::services::node::{NodeManager, NodeStatus};
     use tempfile::TempDir;
 
-    // -----------------------------------------------------------------
-    // Helper: buat NodeManager dengan tempfile agar terisolasi
-    // -----------------------------------------------------------------
     fn make_manager() -> (NodeManager, TempDir) {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("nodes.json");
         std::fs::write(&path, "{}").unwrap();
         let mgr = NodeManager::new(path.to_str().unwrap());
-        (mgr, dir) // TempDir harus di-return agar tidak di-drop lebih awal
+        (mgr, dir)
     }
-
-    // -----------------------------------------------------------------
-    // CREATE – sukses
-    // -----------------------------------------------------------------
 
     #[test]
     fn test_create_node_success() {
@@ -229,11 +241,34 @@ mod operations_tests {
         assert!(result.is_ok(), "create harus sukses: {:?}", result);
         let node = result.unwrap();
         assert_eq!(node.name, "web-1");
-        assert_eq!(node.pid, 100_000);
         assert_eq!(node.url, "http://localhost:3000");
         assert_eq!(node.domain, "example.com");
         assert_eq!(node.route_path, "/api");
         assert_eq!(node.status, NodeStatus::Active);
+        
+        // Verifikasi field audit metadata bawaan terisi dengan benar
+        assert_eq!(node.registered_from_ip, "127.0.0.1");
+        assert_eq!(node.version, "0.1.0");
+        assert!(node.created_at > 0);
+    }
+
+    #[test]
+    fn test_create_with_metadata_success() {
+        let (mgr, _dir) = make_manager();
+        let result = mgr.create_with_metadata(
+            "web-meta",
+            100_088,
+            "http://localhost:3088",
+            "meta.local",
+            "/v1",
+            "192.168.1.50",
+            "1.2.3",
+        );
+        assert!(result.is_ok());
+        let node = result.unwrap();
+        assert_eq!(node.registered_from_ip, "192.168.1.50");
+        assert_eq!(node.version, "1.2.3");
+        assert_eq!(node.consecutive_failures, 0);
     }
 
     #[test]
@@ -251,7 +286,6 @@ mod operations_tests {
         assert_eq!(node.hash.len(), 64, "Hash node harus 64 karakter");
     }
 
-    /// Node dengan PID boundary minimum harus sukses
     #[test]
     fn test_create_node_pid_boundary_min() {
         let (mgr, _dir) = make_manager();
@@ -259,7 +293,6 @@ mod operations_tests {
         assert!(r.is_ok(), "PID_START harus valid: {:?}", r);
     }
 
-    /// Node dengan PID boundary maximum harus sukses
     #[test]
     fn test_create_node_pid_boundary_max() {
         let (mgr, _dir) = make_manager();
@@ -267,7 +300,6 @@ mod operations_tests {
         assert!(r.is_ok(), "PID_END harus valid: {:?}", r);
     }
 
-    /// Route path kosong harus dinormalisasi ke "/"
     #[test]
     fn test_create_node_empty_route_path_normalized_to_slash() {
         let (mgr, _dir) = make_manager();
@@ -283,7 +315,6 @@ mod operations_tests {
         assert_eq!(node.route_path, "/");
     }
 
-    /// Route path dengan trailing slash harus dihilangkan
     #[test]
     fn test_create_node_trailing_slash_normalized() {
         let (mgr, _dir) = make_manager();
@@ -299,7 +330,6 @@ mod operations_tests {
         assert_eq!(node.route_path, "/api");
     }
 
-    /// Domain harus dinormalisasi ke lowercase
     #[test]
     fn test_create_node_domain_normalized_to_lowercase() {
         let (mgr, _dir) = make_manager();
@@ -315,7 +345,6 @@ mod operations_tests {
         assert_eq!(node.domain, "example.com");
     }
 
-    /// URL dengan trailing slash harus dihilangkan
     #[test]
     fn test_create_node_url_trailing_slash_removed() {
         let (mgr, _dir) = make_manager();
@@ -330,10 +359,6 @@ mod operations_tests {
             .unwrap();
         assert_eq!(node.url, "http://localhost:3005");
     }
-
-    // -----------------------------------------------------------------
-    // CREATE – error cases
-    // -----------------------------------------------------------------
 
     #[test]
     fn test_create_node_empty_name_rejected() {
@@ -451,10 +476,6 @@ mod operations_tests {
         );
     }
 
-    // -----------------------------------------------------------------
-    // CREATE – duplikat
-    // -----------------------------------------------------------------
-
     #[test]
     fn test_create_duplicate_name_rejected() {
         let (mgr, _dir) = make_manager();
@@ -466,10 +487,6 @@ mod operations_tests {
             "Node dengan nama yang sama harus AlreadyExists"
         );
     }
-
-    // -----------------------------------------------------------------
-    // DELETE
-    // -----------------------------------------------------------------
 
     #[test]
     fn test_delete_existing_node_success() {
@@ -522,10 +539,6 @@ mod operations_tests {
         assert!(matches!(r, Err(NodeError::NotFound)));
     }
 
-    // -----------------------------------------------------------------
-    // LIST
-    // -----------------------------------------------------------------
-
     #[test]
     fn test_list_empty_returns_none() {
         let (mgr, _dir) = make_manager();
@@ -576,10 +589,6 @@ mod operations_tests {
         assert!(!list.contains(&n1.hash));
     }
 
-    // -----------------------------------------------------------------
-    // GET
-    // -----------------------------------------------------------------
-
     #[test]
     fn test_get_existing_node() {
         let (mgr, _dir) = make_manager();
@@ -596,7 +605,6 @@ mod operations_tests {
         assert!(found.is_some());
         let found = found.unwrap();
         assert_eq!(found.name, "get-me");
-        assert_eq!(found.pid, 100_050);
     }
 
     #[test]
@@ -614,10 +622,6 @@ mod operations_tests {
         mgr.delete(&node.hash).unwrap();
         assert!(mgr.get(&node.hash).is_none());
     }
-
-    // -----------------------------------------------------------------
-    // HTTPS URL
-    // -----------------------------------------------------------------
 
     #[test]
     fn test_create_node_https_url_accepted() {

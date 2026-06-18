@@ -11,6 +11,13 @@ use crate::mcore::melisad::proxy::loadbalancer::{LoadBalancer, LoadBalancingStra
 use crate::mcore::melisad::proxy::metrics::ProxyMetrics;
 use crate::mcore::mlog::LOGGER;
 
+// TODO Tambah endpoint baru untuk monitoring
+
+// GET /api/nodes/status → List semua nodes dengan statusnya
+// GET /api/nodes/suspicious → List nodes yang dicurigai
+// GET /api/nodes/dead → List nodes yang sudah offline > timeout
+// POST /api/nodes/cleanup → Manual cleanup expired nodes
+
 pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize
     let addr = format!("{}:{}", CONFIG.host, CONFIG.port);

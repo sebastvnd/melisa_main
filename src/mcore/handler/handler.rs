@@ -119,7 +119,6 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
         timestamp: Utc::now().timestamp() as u64,
         data: CreateNodeData {
             name: req.name,
-            pid: req.pid,
             url: req.url,
             domain: req.domain,
             route_path: req.route_path,
@@ -142,7 +141,6 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
                     "url": node.url,
                     "domain": node.domain,
                     "route_path": node.route_path,
-                    "pid": node.pid
                 }
             });
             Ok(Response::builder()

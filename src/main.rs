@@ -44,7 +44,7 @@ async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     println!("║                MELISA CORE                 ║");
     println!("║════════════════════════════════════════════╝");
     println!("║  melisa version {}", VERSION);
-    println!("║  open server arsitecture");
+    println!("║  open server architecture");
     println!("║  Copyright (c) 2026 sebastvn.d");
     println!("╚════════════════════════════════════════════╝");
     println!();

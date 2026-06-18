@@ -24,8 +24,6 @@ pub struct ApiResponse<T> {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateNodeData {
     pub name: String,
-    #[serde(default)] // Make pid optional - will be generated if not provided
-    pub pid: Option<u32>,
     pub url: String,
     pub domain: String,
     pub route_path: String,
@@ -39,10 +37,11 @@ pub enum Action {
 
 /// Adapter layer: Convert HTTP request ke API call
 /// Alur: HTTP body → CreateNodeData → create_node() → NODE_MANAGER
+
+// TODO kurang 6 aguments lagi ini karna tambahan 
 pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
     create_node(
         &request.data.name,
-        request.data.pid, // Optional - API service will generate if needed
         &request.data.url,
         &request.data.domain,
         &request.data.route_path,
@@ -79,7 +78,6 @@ mod test {
             timestamp: 17828661,
             data: CreateNodeData {
                 name: "melisa-api".to_string(),
-                pid: Some(100000),
                 url: "http://localhost:3000".to_string(),
                 domain: "melisa.local".to_string(),
                 route_path: "/beta".to_string(),
@@ -123,7 +121,6 @@ mod test {
             timestamp: 17828662,
             data: CreateNodeData {
                 name: "melisa-delete-test".to_string(),
-                pid: Some(100001),
                 url: "http://localhost:3001".to_string(),
                 domain: "delete.local".to_string(),
                 route_path: "/test".to_string(),
@@ -166,7 +163,6 @@ mod test {
             timestamp: 17828663,
             data: CreateNodeData {
                 name: "invalid-pid-node".to_string(),
-                pid: Some(5000), // PID di bawah PID_START (100000)
                 url: "http://localhost:3002".to_string(),
                 domain: "invalid.local".to_string(),
                 route_path: "/invalid".to_string(),
