@@ -138,9 +138,11 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let node_file = temp_dir.path().join("test-nodes.json");
 
+        // TAMBAHKAN field "hash" ke dalam objek JSON bawah ini
         let test_data = r#"{
             "abc123": {
                 "name": "test-node",
+                "hash": "abc123",
                 "url": "http://localhost:3000",
                 "domain": "test.local",
                 "route_path": "/api",

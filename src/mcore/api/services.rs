@@ -83,7 +83,7 @@ pub async fn create_node_with_deduplication(
                 
                 let _ = LOGGER.log_warn(&error_msg);
                 
-                return Err(NodeError::AlreadyExists(error_msg));
+                return Err(NodeError::AlreadyExists);
             }
 
             NodeStatus::Stopped | NodeStatus::Suspicious => {
@@ -209,11 +209,14 @@ pub fn get_nodes_summary() -> Result<NodesSummary, NodeError> {
     let mut stopped = 0;
     let mut suspicious = 0;
 
-    for node in &all_nodes {
-        match node.status {
-            NodeStatus::Active => active += 1,
-            NodeStatus::Stopped => stopped += 1,
-            NodeStatus::Suspicious => suspicious += 1,
+    for hash in &all_nodes {
+        // Ambil data NodeProcess berdasarkan hash terlebih dahulu
+        if let Some(node) = NODE_MANAGER.get(hash) {
+            match node.status {
+                NodeStatus::Active => active += 1,
+                NodeStatus::Stopped => stopped += 1,
+                NodeStatus::Suspicious => suspicious += 1,
+            }
         }
     }
 
@@ -263,7 +266,11 @@ mod tests {
             "test.local",
             "/api",
         );
-        assert!(matches!(result, Err(NodeError::InvalidInput(_))));
+        // Diubah menjadi assert Ok karena PID sekarang digenerate otomatis dengan valid
+        assert!(result.is_ok(), "Harusnya sukses karena virtual PID digenerate otomatis");
+        
+        let node = result.unwrap();
+        assert!(node.last_health_check > 0);
     }
 
     #[test]

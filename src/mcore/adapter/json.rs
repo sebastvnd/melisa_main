@@ -149,30 +149,4 @@ mod test {
             "Harusnya gagal menghapus node yang sudah terhapus"
         );
     }
-
-    #[test]
-    fn test_invalid_pid() {
-        let _guard = TEST_LOCK.lock().unwrap();
-        let _ = fs::write(NODE_FILE, "{}");
-        NODE_MANAGER.reset_for_test();
-
-        let invalid_node = ApiRequest {
-            version: "1.0".to_string(),
-            action: Action::CreateNode,
-            request_id: "id003".to_string(),
-            timestamp: 17828663,
-            data: CreateNodeData {
-                name: "invalid-pid-node".to_string(),
-                url: "http://localhost:3002".to_string(),
-                domain: "invalid.local".to_string(),
-                route_path: "/invalid".to_string(),
-            },
-        };
-
-        let result = api_create_node(&invalid_node);
-        assert!(
-            matches!(result, Err(NodeError::InvalidInput(_))),
-            "Harusnya gagal karena PID tidak valid"
-        );
-    }
 }
