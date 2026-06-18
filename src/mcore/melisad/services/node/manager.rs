@@ -4,8 +4,8 @@ use std::fs;
 use std::sync::{Arc, RwLock, atomic::AtomicUsize};
 
 use crate::mcore::config::load_config::CONFIG;
-use crate::mcore::melisad::services::node::models::{NodeProcess, NodeStatus};
 use crate::mcore::errors::enode::NodeError;
+use crate::mcore::melisad::services::node::models::{NodeProcess, NodeStatus};
 use crate::mcore::mlog::LOGGER;
 
 /// NodeManager manages all registered backend nodes
@@ -59,7 +59,7 @@ impl NodeManager {
             .find(|node| node.url == url)
             .cloned()
     }
-   
+
     /// Get nodes dengan status tertentu (untuk monitoring)
     pub fn get_nodes_by_status(&self, status: NodeStatus) -> Vec<NodeProcess> {
         let processes_lock = self.processes.read().unwrap();
@@ -69,7 +69,7 @@ impl NodeManager {
             .cloned()
             .collect()
     }
-    
+
     /// Get nodes yang "suspicious" untuk dalam bentuk Tuple (Nama, Total Gagal)
     pub fn get_suspicious_nodes(&self) -> Vec<(String, u32)> {
         let processes_lock = self.processes.read().unwrap();
@@ -79,7 +79,7 @@ impl NodeManager {
             .map(|node| (node.name.clone(), node.consecutive_failures))
             .collect()
     }
-    
+
     /// Cleanup nodes yang sudah mati > N seconds
     /// Note: Diubah menjadi fungsi sinkronus biasa karena tidak menggunakan call .await di dalamnya
     pub fn cleanup_dead_nodes(&self, timeout_secs: u64) -> std::result::Result<usize, NodeError> {
@@ -87,12 +87,12 @@ impl NodeManager {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         let mut count = 0;
         {
             let mut processes_lock = self.processes.write().unwrap();
             let mut new_map = (**processes_lock).clone();
-            
+
             new_map.retain(|hash, node| {
                 let time_since_last_seen = now - node.last_heartbeat;
                 if time_since_last_seen > timeout_secs {
@@ -107,10 +107,10 @@ impl NodeManager {
                     true
                 }
             });
-            
+
             *processes_lock = Arc::new(new_map);
         }
-        
+
         // Panggil self.flush() bawaan persistence.rs secara langsung tanpa repot import
         self.flush()?;
         Ok(count)

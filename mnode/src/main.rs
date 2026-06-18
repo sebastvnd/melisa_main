@@ -53,12 +53,20 @@ async fn main() {
 
     // Register dengan melisa
     println!("Connecting to Melisa Management API...");
-    if let Err(e) = register_with_melisa(&config).await {
-        eprintln!("⚠ Warning: Failed to register with Melisa: {}", e);
-        eprintln!("Continuing anyway - node will be unavailable until registered");
-    } else {
-        println!("✓ Successfully registered with Melisa");
-    }
+
+    let config_clone = config.clone();
+
+    tokio::spawn(async move {
+        if let Err(e) = register_with_melisa(&config).await {
+            eprintln!("⚠ Warning: Failed to register with Melisa: {}", e);
+            eprintln!("Continuing anyway - node will be unavailable until registered");
+        } else {
+            println!("✓ Successfully registered with Melisa");
+        }
+    });
+
+    run_node_server(&config).await?;
+
     println!("");
 
     // Start HTTP server

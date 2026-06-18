@@ -26,7 +26,7 @@ impl fmt::Display for NodeStatus {
 }
 
 /// Struktur data untuk tracking satu node
-/// 
+///
 /// Alur data:
 /// 1. MNode register → NodeProcess dibuat
 /// 2. Setiap 30 detik, health check → update status & timestamp
@@ -35,41 +35,41 @@ impl fmt::Display for NodeStatus {
 pub struct NodeProcess {
     /// Nama node (dari registration)
     pub name: String,
-    
+
     /// Hash SHA256(name+url) - unique identifier
     pub hash: String,
-    
+
     /// Base URL dari node (http://10.0.0.1:3000)
     pub url: String,
-    
+
     /// Domain yang di-route ke node ini
     pub domain: String,
-    
+
     /// Route path (e.g., /api, /app)
     pub route_path: String,
-    
+
     /// Status node saat ini
     pub status: NodeStatus,
-    
+
     /// ✅ BARU: Unix timestamp saat node pertama kali di-register
     pub created_at: u64,
-    
+
     /// ✅ BARU: Unix timestamp last successful health check
     /// Digunakan untuk: mengetahui kapan node terakhir hidup
     pub last_heartbeat: u64,
-    
+
     /// ✅ BARU: Unix timestamp terakhir health check dilakukan
     /// Digunakan untuk: membedakan "belum di-check" vs "sudah di-check tapi failed"
     pub last_health_check: u64,
-    
+
     /// ✅ BARU: Jumlah consecutive failures health check
     /// Digunakan untuk: mendeteksi node yang problematic (Suspicious status)
     pub consecutive_failures: u32,
-    
+
     /// ✅ BARU: IP address dari client yang melakukan registration
     /// Digunakan untuk: debugging dan audit trail
     pub registered_from_ip: String,
-    
+
     /// ✅ BARU: Versi MNode yang melakukan registration
     /// Digunakan untuk: compatibility checking
     pub version: String,
@@ -77,7 +77,7 @@ pub struct NodeProcess {
 
 impl NodeProcess {
     /// Create new NodeProcess dengan timestamp initialization
-    /// 
+    ///
     /// # Arguments
     /// * `name` - Nama node
     /// * `hash` - SHA256 hash
@@ -86,7 +86,7 @@ impl NodeProcess {
     /// * `route_path` - Route path
     /// * `registered_from_ip` - IP dari registrant
     /// * `version` - Versi MNode
-    /// 
+    ///
     /// # Returns
     /// New NodeProcess dengan status=Active dan timestamps initialized ke current time
     pub fn new(
@@ -120,7 +120,7 @@ impl NodeProcess {
     }
 
     /// Update node status dan timestamps setelah health check
-    /// 
+    ///
     /// # Arguments
     /// * `new_status` - Hasil health check (Active/Stopped)
     pub fn update_health_status(&mut self, new_status: NodeStatus) {
@@ -150,10 +150,10 @@ impl NodeProcess {
     }
 
     /// Check apakah node sudah dead (tidak responsif untuk waktu tertentu)
-    /// 
+    ///
     /// # Arguments
     /// * `timeout_seconds` - Berapa detik node boleh offline sebelum dianggap "dead"
-    /// 
+    ///
     /// # Returns
     /// true jika last_heartbeat > timeout_seconds yang lalu
     pub fn is_dead(&self, timeout_seconds: u64) -> bool {
@@ -166,7 +166,7 @@ impl NodeProcess {
     }
 
     /// Get uptime information untuk monitoring
-    /// 
+    ///
     /// # Returns
     /// (time_online_secs, time_since_last_heartbeat_secs)
     pub fn get_uptime_info(&self) -> (u64, u64) {

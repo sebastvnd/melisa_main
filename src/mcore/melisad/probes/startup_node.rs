@@ -10,7 +10,7 @@ use std::time::Duration;
 
 impl NodeManager {
     /// Main health check function dengan cleanup dan monitoring
-    /// 
+    ///
     /// Alur:
     /// 1. Buat HTTP client untuk concurrent checks
     /// 2. Lock read untuk get semua nodes
@@ -191,18 +191,21 @@ impl NodeManager {
     /// ============================================================
 
     /// Manual cleanup untuk nodes yang sudah dead > timeout_seconds
-    /// 
+    ///
     /// Berguna untuk:
     /// - Manual intervention jika auto-cleanup tidak berjalan
     /// - Batch cleanup dengan custom timeout
     /// - Administrative tasks
-    /// 
+    ///
     /// # Arguments
     /// * `timeout_seconds` - Node offline lebih dari ini akan di-remove
-    /// 
+    ///
     /// # Returns
     /// Jumlah nodes yang di-remove
-    pub async fn cleanup_node(&self, timeout_seconds: u64) -> std::result::Result<usize, NodeError> {
+    pub async fn cleanup_node(
+        &self,
+        timeout_seconds: u64,
+    ) -> std::result::Result<usize, NodeError> {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()

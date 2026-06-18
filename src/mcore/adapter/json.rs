@@ -38,7 +38,7 @@ pub enum Action {
 /// Adapter layer: Convert HTTP request ke API call
 /// Alur: HTTP body → CreateNodeData → create_node() → NODE_MANAGER
 
-// TODO kurang 6 aguments lagi ini karna tambahan 
+// TODO kurang 6 aguments lagi ini karna tambahan
 pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
     create_node(
         &request.data.name,

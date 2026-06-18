@@ -67,9 +67,9 @@ impl NodeManager {
         // --- REVISI VALIDASI ANTI-HIJACKING ---
         // Di sini kita MEMPERBOLEHKAN rute tumpang tindih untuk kebutuhan Load Balancing & Sub-routes.
         let is_invalid_override = new_map.values().any(|existing_node| {
-            existing_node.domain == domain 
-                && existing_node.route_path == route_path 
-                && existing_node.name != name 
+            existing_node.domain == domain
+                && existing_node.route_path == route_path
+                && existing_node.name != name
                 && existing_node.url == url
         });
 
@@ -245,7 +245,7 @@ mod operations_tests {
         assert_eq!(node.domain, "example.com");
         assert_eq!(node.route_path, "/api");
         assert_eq!(node.status, NodeStatus::Active);
-        
+
         // Verifikasi field audit metadata bawaan terisi dengan benar
         assert_eq!(node.registered_from_ip, "127.0.0.1");
         assert_eq!(node.version, "0.1.0");

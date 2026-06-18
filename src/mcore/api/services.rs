@@ -3,8 +3,8 @@
 
 use crate::mcore::config::load_config::{PID_END, PID_START};
 use crate::mcore::errors::enode::NodeError;
-use crate::mcore::melisad::services::node::{NODE_MANAGER, NodeProcess, NodeStatus};
 use crate::mcore::melisad::probes::liveness_node::check_node_network;
+use crate::mcore::melisad::services::node::{NODE_MANAGER, NodeProcess, NodeStatus};
 use crate::mcore::mlog::LOGGER;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -23,7 +23,7 @@ pub fn generate_virtual_pid(node_identifier: &str) -> u32 {
 }
 
 /// API Service: Create node dengan validation + deduplication
-/// 
+///
 /// Alur:
 /// 1. Validasi input (name, url format)
 /// 2. ✅ Check deduplication: apakah URL sudah ada?
@@ -43,7 +43,7 @@ pub async fn create_node_with_deduplication(
     // ============================================================
     // Step 1: Basic Validation
     // ============================================================
-    
+
     if name.trim().is_empty() {
         return Err(NodeError::InvalidInput("name cannot be empty".to_string()));
     }
@@ -62,7 +62,7 @@ pub async fn create_node_with_deduplication(
     // ============================================================
     // Step 2: ✅ DEDUPLICATION CHECK - Cek apakah URL sudah ada
     // ============================================================
-    
+
     if let Some(existing_node) = NODE_MANAGER.find_by_url(url) {
         let _ = LOGGER.log_info(&format!(
             "Deduplication: Found existing node '{}' with same URL. Performing liveness check...",
@@ -80,9 +80,9 @@ pub async fn create_node_with_deduplication(
                     Delete the old node first or use a different URL.",
                     existing_node.name, url
                 );
-                
+
                 let _ = LOGGER.log_warn(&error_msg);
-                
+
                 return Err(NodeError::AlreadyExists);
             }
 
@@ -172,7 +172,6 @@ pub fn create_node(
     // Gunakan PID yang diberikan, atau generate virtual PID
     let final_pid = generate_virtual_pid(&format!("{}-{}", name, url));
 
-
     // Delegasi ke melisad layer
     NODE_MANAGER.create(name, final_pid, url, domain, route_path)
 }
@@ -201,9 +200,9 @@ pub fn delete_node(hash: &str) -> Result<(), NodeError> {
 
 /// Get summary dari semua node untuk monitoring
 pub fn get_nodes_summary() -> Result<NodesSummary, NodeError> {
-    let all_nodes = NODE_MANAGER.list().ok_or_else(|| {
-        NodeError::InvalidInput("Failed to get nodes list".to_string())
-    })?;
+    let all_nodes = NODE_MANAGER
+        .list()
+        .ok_or_else(|| NodeError::InvalidInput("Failed to get nodes list".to_string()))?;
 
     let mut active = 0;
     let mut stopped = 0;
@@ -249,26 +248,19 @@ mod tests {
 
     #[test]
     fn test_validate_name() {
-        let result = create_node(
-            "",
-            "http://localhost:3000",
-            "test.local",
-            "/api",
-        );
+        let result = create_node("", "http://localhost:3000", "test.local", "/api");
         assert!(matches!(result, Err(NodeError::InvalidInput(_))));
     }
 
     #[test]
     fn test_pid_validation() {
-        let result = create_node(
-            "test-node",
-            "http://localhost:3000",
-            "test.local",
-            "/api",
-        );
+        let result = create_node("test-node", "http://localhost:3000", "test.local", "/api");
         // Diubah menjadi assert Ok karena PID sekarang digenerate otomatis dengan valid
-        assert!(result.is_ok(), "Harusnya sukses karena virtual PID digenerate otomatis");
-        
+        assert!(
+            result.is_ok(),
+            "Harusnya sukses karena virtual PID digenerate otomatis"
+        );
+
         let node = result.unwrap();
         assert!(node.last_health_check > 0);
     }
