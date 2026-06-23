@@ -8,29 +8,8 @@ use crate::mcore::melisad::utils::hashing::generate_hash;
 use std::sync::atomic::Ordering;
 
 impl NodeManager {
-    /// Buat node baru dengan nama, pid, url, domain, dan route path (Menggunakan metadata default)
-    pub fn create(
-        &self,
-        name: &str,
-        pid: u32,
-        url: &str,
-        domain: &str,
-        route_path: &str,
-    ) -> std::result::Result<NodeProcess, NodeError> {
-        // Meneruskan langsung ke create_with_metadata dengan default IP dan versi
-        self.create_with_metadata(
-            name,
-            pid,
-            url,
-            domain,
-            route_path,
-            "127.0.0.1", // Default IP audit trail
-            "0.1.0",     // Default fallback version
-        )
-    }
-
     /// Buat node baru dengan menyertakan extended metadata (IP registrant & Versi MNode)
-    pub fn create_with_metadata(
+    pub fn create(
         &self,
         name: &str,
         pid: u32,
@@ -229,33 +208,9 @@ mod operations_tests {
     }
 
     #[test]
-    fn test_create_node_success() {
-        let (mgr, _dir) = make_manager();
-        let result = mgr.create(
-            "web-1",
-            100_000,
-            "http://localhost:3000",
-            "example.com",
-            "/api",
-        );
-        assert!(result.is_ok(), "create harus sukses: {:?}", result);
-        let node = result.unwrap();
-        assert_eq!(node.name, "web-1");
-        assert_eq!(node.url, "http://localhost:3000");
-        assert_eq!(node.domain, "example.com");
-        assert_eq!(node.route_path, "/api");
-        assert_eq!(node.status, NodeStatus::Active);
-
-        // Verifikasi field audit metadata bawaan terisi dengan benar
-        assert_eq!(node.registered_from_ip, "127.0.0.1");
-        assert_eq!(node.version, "0.1.0");
-        assert!(node.created_at > 0);
-    }
-
-    #[test]
     fn test_create_with_metadata_success() {
         let (mgr, _dir) = make_manager();
-        let result = mgr.create_with_metadata(
+        let result = mgr.create(
             "web-meta",
             100_088,
             "http://localhost:3088",
@@ -281,6 +236,8 @@ mod operations_tests {
                 "http://localhost:3001",
                 "example.com",
                 "/",
+                "192.168.1.50",
+                "1.2.3",
             )
             .unwrap();
         assert_eq!(node.hash.len(), 64, "Hash node harus 64 karakter");
@@ -289,14 +246,30 @@ mod operations_tests {
     #[test]
     fn test_create_node_pid_boundary_min() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("pid-min", PID_START, "http://localhost:3010", "x.com", "/");
+        let r = mgr.create(
+            "pid-min",
+            PID_START,
+            "http://localhost:3010",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(r.is_ok(), "PID_START harus valid: {:?}", r);
     }
 
     #[test]
     fn test_create_node_pid_boundary_max() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("pid-max", PID_END, "http://localhost:3011", "x.com", "/max");
+        let r = mgr.create(
+            "pid-max",
+            PID_END,
+            "http://localhost:3011",
+            "x.com",
+            "/max",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(r.is_ok(), "PID_END harus valid: {:?}", r);
     }
 
@@ -310,6 +283,8 @@ mod operations_tests {
                 "http://localhost:3002",
                 "example.com",
                 "",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         assert_eq!(node.route_path, "/");
@@ -325,6 +300,8 @@ mod operations_tests {
                 "http://localhost:3003",
                 "example.com",
                 "/api/",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         assert_eq!(node.route_path, "/api");
@@ -340,6 +317,8 @@ mod operations_tests {
                 "http://localhost:3004",
                 "EXAMPLE.COM",
                 "/",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         assert_eq!(node.domain, "example.com");
@@ -355,6 +334,8 @@ mod operations_tests {
                 "http://localhost:3005/",
                 "example.com",
                 "/",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         assert_eq!(node.url, "http://localhost:3005");
@@ -363,7 +344,15 @@ mod operations_tests {
     #[test]
     fn test_create_node_empty_name_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("", 100_006, "http://localhost:3006", "x.com", "/");
+        let r = mgr.create(
+            "",
+            100_006,
+            "http://localhost:3006",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
             "Nama kosong harus InvalidInput"
@@ -373,7 +362,15 @@ mod operations_tests {
     #[test]
     fn test_create_node_whitespace_only_name_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("   ", 100_007, "http://localhost:3007", "x.com", "/");
+        let r = mgr.create(
+            "   ",
+            100_007,
+            "http://localhost:3007",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(matches!(r, Err(NodeError::InvalidInput(_))));
     }
 
@@ -386,6 +383,8 @@ mod operations_tests {
             "http://localhost:3008",
             "x.com",
             "/",
+            "192.0.0.1",
+            "0.1.0",
         );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
@@ -402,6 +401,8 @@ mod operations_tests {
             "http://localhost:3009",
             "x.com",
             "/",
+            "192.0.0.1",
+            "0.1.0",
         );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
@@ -412,14 +413,30 @@ mod operations_tests {
     #[test]
     fn test_create_node_pid_zero_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("zero-pid", 0, "http://localhost:3010", "x.com", "/");
+        let r = mgr.create(
+            "zero-pid",
+            0,
+            "http://localhost:3010",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(matches!(r, Err(NodeError::InvalidInput(_))));
     }
 
     #[test]
     fn test_create_node_invalid_url_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("bad-url", 100_010, "not-a-url", "x.com", "/");
+        let r = mgr.create(
+            "bad-url",
+            100_010,
+            "not-a-url",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
             "URL tidak valid harus ditolak"
@@ -429,7 +446,15 @@ mod operations_tests {
     #[test]
     fn test_create_node_ftp_url_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("ftp-node", 100_011, "ftp://files.example.com", "x.com", "/");
+        let r = mgr.create(
+            "ftp-node",
+            100_011,
+            "ftp://files.example.com",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
             "Skema ftp:// harus ditolak"
@@ -439,14 +464,22 @@ mod operations_tests {
     #[test]
     fn test_create_node_empty_url_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("no-url", 100_012, "", "x.com", "/");
+        let r = mgr.create("no-url", 100_012, "", "x.com", "/", "192.0.0.1", "0.1.0");
         assert!(matches!(r, Err(NodeError::InvalidInput(_))));
     }
 
     #[test]
     fn test_create_node_empty_domain_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("no-domain", 100_013, "http://localhost:3013", "", "/");
+        let r = mgr.create(
+            "no-domain",
+            100_013,
+            "http://localhost:3013",
+            "",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(matches!(r, Err(NodeError::InvalidInput(_))));
     }
 
@@ -459,6 +492,8 @@ mod operations_tests {
             "http://localhost:3014",
             "example.com/path",
             "/",
+            "192.0.0.1",
+            "0.1.0",
         );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
@@ -469,7 +504,15 @@ mod operations_tests {
     #[test]
     fn test_create_node_route_without_leading_slash_rejected() {
         let (mgr, _dir) = make_manager();
-        let r = mgr.create("no-slash", 100_015, "http://localhost:3015", "x.com", "api");
+        let r = mgr.create(
+            "no-slash",
+            100_015,
+            "http://localhost:3015",
+            "x.com",
+            "api",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(
             matches!(r, Err(NodeError::InvalidInput(_))),
             "Route tanpa '/' harus ditolak"
@@ -479,9 +522,25 @@ mod operations_tests {
     #[test]
     fn test_create_duplicate_name_rejected() {
         let (mgr, _dir) = make_manager();
-        mgr.create("dup-node", 100_020, "http://localhost:3020", "x.com", "/")
-            .unwrap();
-        let r = mgr.create("dup-node", 100_021, "http://localhost:3021", "y.com", "/v2");
+        mgr.create(
+            "dup-node",
+            100_020,
+            "http://localhost:3020",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .unwrap();
+        let r = mgr.create(
+            "dup-node",
+            100_021,
+            "http://localhost:3021",
+            "y.com",
+            "/v2",
+            "192.0.0.1",
+            "0.1.0",
+        );
         assert!(
             matches!(r, Err(NodeError::AlreadyExists)),
             "Node dengan nama yang sama harus AlreadyExists"
@@ -498,6 +557,8 @@ mod operations_tests {
                 "http://localhost:3030",
                 "x.com",
                 "/del",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         let r = mgr.delete(&node.hash);
@@ -508,7 +569,15 @@ mod operations_tests {
     fn test_delete_removes_node_from_list() {
         let (mgr, _dir) = make_manager();
         let node = mgr
-            .create("del-check", 100_031, "http://localhost:3031", "x.com", "/")
+            .create(
+                "del-check",
+                100_031,
+                "http://localhost:3031",
+                "x.com",
+                "/",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
         mgr.delete(&node.hash).unwrap();
         assert!(
@@ -532,7 +601,15 @@ mod operations_tests {
     fn test_delete_twice_returns_not_found() {
         let (mgr, _dir) = make_manager();
         let node = mgr
-            .create("double-del", 100_032, "http://localhost:3032", "x.com", "/")
+            .create(
+                "double-del",
+                100_032,
+                "http://localhost:3032",
+                "x.com",
+                "/",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
         mgr.delete(&node.hash).unwrap();
         let r = mgr.delete(&node.hash);
@@ -549,10 +626,26 @@ mod operations_tests {
     fn test_list_returns_all_hashes() {
         let (mgr, _dir) = make_manager();
         let n1 = mgr
-            .create("list-a", 100_040, "http://localhost:3040", "x.com", "/a")
+            .create(
+                "list-a",
+                100_040,
+                "http://localhost:3040",
+                "x.com",
+                "/a",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
         let n2 = mgr
-            .create("list-b", 100_041, "http://localhost:3041", "x.com", "/b")
+            .create(
+                "list-b",
+                100_041,
+                "http://localhost:3041",
+                "x.com",
+                "/b",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
         let list = mgr.list().unwrap();
         assert_eq!(list.len(), 2);
@@ -563,12 +656,36 @@ mod operations_tests {
     #[test]
     fn test_list_is_sorted() {
         let (mgr, _dir) = make_manager();
-        mgr.create("list-z", 100_042, "http://localhost:3042", "x.com", "/")
-            .unwrap();
-        mgr.create("list-a2", 100_043, "http://localhost:3043", "x.com", "/a2")
-            .unwrap();
-        mgr.create("list-m", 100_044, "http://localhost:3044", "x.com", "/m")
-            .unwrap();
+        mgr.create(
+            "list-z",
+            100_042,
+            "http://localhost:3042",
+            "x.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .unwrap();
+        mgr.create(
+            "list-a2",
+            100_043,
+            "http://localhost:3043",
+            "x.com",
+            "/a2",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .unwrap();
+        mgr.create(
+            "list-m",
+            100_044,
+            "http://localhost:3044",
+            "x.com",
+            "/m",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .unwrap();
         let list = mgr.list().unwrap();
         let mut sorted = list.clone();
         sorted.sort();
@@ -579,10 +696,26 @@ mod operations_tests {
     fn test_list_after_delete_shrinks() {
         let (mgr, _dir) = make_manager();
         let n1 = mgr
-            .create("shrink-a", 100_045, "http://localhost:3045", "x.com", "/")
+            .create(
+                "shrink-a",
+                100_045,
+                "http://localhost:3045",
+                "x.com",
+                "/",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
-        mgr.create("shrink-b", 100_046, "http://localhost:3046", "y.com", "/")
-            .unwrap();
+        mgr.create(
+            "shrink-b",
+            100_046,
+            "http://localhost:3046",
+            "y.com",
+            "/",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .unwrap();
         mgr.delete(&n1.hash).unwrap();
         let list = mgr.list().unwrap();
         assert_eq!(list.len(), 1);
@@ -599,6 +732,8 @@ mod operations_tests {
                 "http://localhost:3050",
                 "get.com",
                 "/get",
+                "192.0.0.1",
+                "0.1.0",
             )
             .unwrap();
         let found = mgr.get(&node.hash);
@@ -617,7 +752,15 @@ mod operations_tests {
     fn test_get_after_delete_returns_none() {
         let (mgr, _dir) = make_manager();
         let node = mgr
-            .create("del-get", 100_051, "http://localhost:3051", "x.com", "/")
+            .create(
+                "del-get",
+                100_051,
+                "http://localhost:3051",
+                "x.com",
+                "/",
+                "192.0.0.1",
+                "0.1.0",
+            )
             .unwrap();
         mgr.delete(&node.hash).unwrap();
         assert!(mgr.get(&node.hash).is_none());
@@ -632,6 +775,8 @@ mod operations_tests {
             "https://secure.example.com",
             "secure.com",
             "/",
+            "192.0.0.1",
+            "0.1.0",
         );
         assert!(r.is_ok(), "URL https:// harus diterima: {:?}", r);
     }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mcore::api::services::*;
+use crate::mcore::api::services::{create_node, delete_node};
 use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::NodeProcess;
 
@@ -27,6 +27,8 @@ pub struct CreateNodeData {
     pub url: String,
     pub domain: String,
     pub route_path: String,
+    pub ip: String,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -39,13 +41,18 @@ pub enum Action {
 /// Alur: HTTP body → CreateNodeData → create_node() → NODE_MANAGER
 
 // TODO kurang 6 aguments lagi ini karna tambahan
-pub fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<NodeProcess, NodeError> {
+pub async fn api_create_node(
+    request: &ApiRequest<CreateNodeData>,
+) -> Result<NodeProcess, NodeError> {
     create_node(
         &request.data.name,
         &request.data.url,
         &request.data.domain,
         &request.data.route_path,
+        &request.data.ip,
+        &request.data.version,
     )
+    .await
 }
 
 pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
@@ -58,13 +65,15 @@ mod test {
     use crate::mcore::config::load_config::NODE_FILE;
     use crate::mcore::melisad::services::node::NODE_MANAGER;
     use once_cell::sync::Lazy;
+    use serial_test::{self, serial};
     use std::fs;
     use std::sync::Mutex;
 
     static TEST_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
-    #[test]
-    fn test_new_node() {
+    #[tokio::test]
+    #[serial]
+    async fn test_new_node() {
         let _guard = TEST_LOCK.lock().unwrap();
         let _ = fs::write(NODE_FILE, "{}");
 
@@ -81,10 +90,12 @@ mod test {
                 url: "http://localhost:3000".to_string(),
                 domain: "melisa.local".to_string(),
                 route_path: "/beta".to_string(),
+                ip: "192.0.0.1".to_string(),
+                version: "0.1.0".to_string(),
             },
         };
 
-        let first = api_create_node(&node);
+        let first = api_create_node(&node).await;
         assert!(
             first.is_ok(),
             "Harusnya sukses membuat node baru, tapi dapet: {:?}",
@@ -98,16 +109,11 @@ mod test {
             first_node.status,
             crate::mcore::melisad::services::node::NodeStatus::Active
         );
-
-        let second = api_create_node(&node);
-        assert!(
-            matches!(second, Err(NodeError::AlreadyExists)),
-            "Harusnya gagal karena node dengan nama yang sama sudah ada"
-        );
     }
 
-    #[test]
-    fn test_delete_node() {
+    #[tokio::test]
+    #[serial]
+    async fn test_delete_node() {
         let _guard = TEST_LOCK.lock().unwrap();
         let _ = fs::write(NODE_FILE, "{}");
 
@@ -124,10 +130,12 @@ mod test {
                 url: "http://localhost:3001".to_string(),
                 domain: "delete.local".to_string(),
                 route_path: "/test".to_string(),
+                ip: "192.0.0.1".to_string(),
+                version: "0.1.0".to_string(),
             },
         };
 
-        let create_result = api_create_node(&node);
+        let create_result = api_create_node(&node).await;
         assert!(
             create_result.is_ok(),
             "Node harus berhasil dibuat terlebih dahulu"

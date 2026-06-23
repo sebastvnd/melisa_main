@@ -19,11 +19,11 @@ use crate::mcore::mlog::LOGGER;
 #[derive(serde::Deserialize, Debug)]
 pub struct RegisterNodeRequest {
     pub name: String,
-    #[serde(default)]
-    pub pid: Option<u32>, // Optional - will be generated in API layer
     pub url: String,
     pub domain: String,
     pub route_path: String,
+    pub ip: String,
+    pub version: String,
 }
 
 #[derive(serde::Serialize)]
@@ -122,11 +122,13 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
             url: req.url,
             domain: req.domain,
             route_path: req.route_path,
+            ip: req.ip,
+            version: req.version,
         },
     };
 
-    // Step 3: Call adapter → api/services → melisad (NODE_MANAGER.create)
-    match api_create_node(&api_request) {
+    // Step 3: Call adapter (json.rs) → api/service → melisad (NODE_MANAGER.create)
+    match api_create_node(&api_request).await {
         Ok(node) => {
             let _ = LOGGER.log_info(&format!(
                 "Node registered via API: {} at {}",
@@ -141,7 +143,8 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
                     "url": node.url,
                     "domain": node.domain,
                     "route_path": node.route_path,
-                }
+                    "ip": node.registered_from_ip,
+                    "version": node.version,                }
             });
             Ok(Response::builder()
                 .status(StatusCode::CREATED)

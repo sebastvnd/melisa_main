@@ -182,7 +182,7 @@ impl Logger {
         let log_line = format!("[{}] [INFO] {}", timestamp, msg);
 
         if let Ok(mut buffer) = self.buffer.lock() {
-            buffer.info_logs.push(log_line); // Simpan di info log untuk info level
+            buffer.info_logs.push(log_line);
         }
 
         self.check_and_flush()?;
@@ -209,7 +209,6 @@ impl Logger {
     /// Log proxy-specific events
     pub fn log_proxy(&self, msg: &str) -> std::io::Result<()> {
         if !self.config.proxy_log_enabled {
-            // ✅ Hormati config
             return Ok(());
         }
         let timestamp = Local::now().format("%Y/%m/%d %H:%M:%S%.3f").to_string();

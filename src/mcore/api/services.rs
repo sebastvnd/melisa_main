@@ -1,39 +1,18 @@
 // src/mcore/api/services.rs
 // ✅ UPDATED: Dengan deduplication check dan enhanced validation
 
-use crate::mcore::config::load_config::{PID_END, PID_START};
 use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::probes::liveness_node::check_node_network;
 use crate::mcore::melisad::services::node::{NODE_MANAGER, NodeProcess, NodeStatus};
+use crate::mcore::melisad::utils::pid::generate_pid;
 use crate::mcore::mlog::LOGGER;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 
-/// Generate virtual PID untuk worker nodes
-/// Range: 100,000 - 999,999 (reserved untuk managed nodes)
-pub fn generate_virtual_pid(node_identifier: &str) -> u32 {
-    let mut hasher = DefaultHasher::new();
-    node_identifier.hash(&mut hasher);
-    let hash_value = hasher.finish();
+// TODO pembuatan node baru sekarang seharusnya memakai yang ini fungis create_node()
+//      yang lama sudah tidak berfungsi.
+//      create node + validation deduplication
 
-    // Map ke range PID_START..=PID_END (100k - 999k)
-    let range_size = (PID_END - PID_START + 1) as u64;
-    let virtual_pid = PID_START as u64 + (hash_value % range_size);
-    virtual_pid as u32
-}
-
-/// API Service: Create node dengan validation + deduplication
-///
-/// Alur:
-/// 1. Validasi input (name, url format)
-/// 2. ✅ Check deduplication: apakah URL sudah ada?
-/// 3. ✅ Jika ada: lakukan liveness check ke node lama
-/// 4. ✅ Jika node lama masih aktif: REJECT (duplicate)
-/// 5. ✅ Jika node lama sudah mati: REPLACE
-/// 6. Create node baru
-pub async fn create_node_with_deduplication(
+pub async fn create_node(
     name: &str,
-    pid: Option<u32>,
     url: &str,
     domain: &str,
     route_path: &str,
@@ -115,25 +94,13 @@ pub async fn create_node_with_deduplication(
     // Step 3: Validate & Generate PID
     // ============================================================
 
-    let final_pid = match pid {
-        Some(p) if (PID_START..=PID_END).contains(&p) => p,
-        Some(_) => {
-            return Err(NodeError::InvalidInput(format!(
-                "pid out of allowed range [{}, {}]",
-                PID_START, PID_END
-            )));
-        }
-        None => {
-            // Generate virtual PID dari node identifier
-            generate_virtual_pid(&format!("{}-{}", name, url))
-        }
-    };
+    let final_pid = generate_pid(&format!("{}-{}", name, url));
 
     // ============================================================
     // Step 4: Create node via NODE_MANAGER (dengan info client)
     // ============================================================
 
-    match NODE_MANAGER.create_with_metadata(
+    match NODE_MANAGER.create(
         name,
         final_pid,
         url,
@@ -154,26 +121,6 @@ pub async fn create_node_with_deduplication(
             Err(e)
         }
     }
-}
-
-/// Old synchronous version (backward compatibility)
-/// ⚠️ DEPRECATED - Gunakan create_node_with_deduplication() yang async
-pub fn create_node(
-    name: &str,
-    url: &str,
-    domain: &str,
-    route_path: &str,
-) -> Result<NodeProcess, NodeError> {
-    // Validation - nama tidak boleh kosong
-    if name.trim().is_empty() {
-        return Err(NodeError::InvalidInput("name cannot be empty".to_string()));
-    }
-
-    // Gunakan PID yang diberikan, atau generate virtual PID
-    let final_pid = generate_virtual_pid(&format!("{}-{}", name, url));
-
-    // Delegasi ke melisad layer
-    NODE_MANAGER.create(name, final_pid, url, domain, route_path)
 }
 
 /// Delete node dengan validation
@@ -239,22 +186,22 @@ pub struct NodesSummary {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mcore::config::load_config::NODE_FILE;
     use once_cell::sync::Lazy;
-    use std::fs;
     use std::sync::Mutex;
 
     static TEST_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
-    #[test]
-    fn test_validate_name() {
-        let result = create_node("", "http://localhost:3000", "test.local", "/api");
-        assert!(matches!(result, Err(NodeError::InvalidInput(_))));
-    }
-
-    #[test]
-    fn test_pid_validation() {
-        let result = create_node("test-node", "http://localhost:3000", "test.local", "/api");
+    #[tokio::test]
+    async fn test_pid_validation() {
+        let result = create_node(
+            "test-node",
+            "http://localhost:3000",
+            "test.local",
+            "/api",
+            "192.0.0.1",
+            "0.1.0",
+        )
+        .await;
         // Diubah menjadi assert Ok karena PID sekarang digenerate otomatis dengan valid
         assert!(
             result.is_ok(),
@@ -263,15 +210,5 @@ mod tests {
 
         let node = result.unwrap();
         assert!(node.last_health_check > 0);
-    }
-
-    #[test]
-    fn test_virtual_pid_generation() {
-        let pid1 = generate_virtual_pid("node1-http://localhost:3000");
-        let pid2 = generate_virtual_pid("node2-http://localhost:3001");
-
-        assert!(pid1 >= PID_START && pid1 <= PID_END);
-        assert!(pid2 >= PID_START && pid2 <= PID_END);
-        assert_ne!(pid1, pid2); // Different identifiers should generate different PIDs
     }
 }

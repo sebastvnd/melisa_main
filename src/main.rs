@@ -22,7 +22,7 @@ use std::time::Duration;
 // Di mulai untuk umat manusia
 // Juni 2026
 // Kita ke ijen kan?
-// Kamu masih ingetkan ...f
+// Kamu masih ingetkan ..... f
 
 #[tokio::main]
 async fn main() {
@@ -34,7 +34,7 @@ async fn main() {
     }
 }
 
-// TODO melisad belum bisa mendeteksi mana node yang masih aktif
+// TODO masih banyak implementasi yang berantakan
 async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     let config = &*CONFIG;
     let node_count = NODE_MANAGER.list().map_or(0, |nodes| nodes.len());
