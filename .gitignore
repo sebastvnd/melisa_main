@@ -1,8 +1,12 @@
 /target
 /mnode/target
+/formater-rs/target
+
 /doc
 
 melisa.conf
 nodes.json
 
 /mnode/mnode.conf
+
+*.md
