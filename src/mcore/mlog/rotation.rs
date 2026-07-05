@@ -1,3 +1,7 @@
+// mcore/mlog/rotation.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use chrono::Local;
 /// Log rotation dan file management
 use std::fs;

@@ -1,3 +1,7 @@
+// mcore/config/load_config.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use serde::Deserialize;
 use std::fs;
 
@@ -8,15 +12,25 @@ use once_cell::sync::Lazy;
 // const variabels
 pub const NODE_FILE: &str = "nodes.json"; // berisi daftar node
 
+// konstanta sharding
+pub const SHARD_COUNT: usize = 64;
+
 // batasan pid untuk node yang valid
 pub const PID_START: u32 = 100_000;
 pub const PID_END: u32 = 999_999;
+
+pub const TOTAL_SLOTS: u32 = PID_END - PID_START + 1;
+
+pub const BASE_SHARD_SIZE: u32 = TOTAL_SLOTS / SHARD_COUNT as u32;
+pub const REMAINDER: u32 = TOTAL_SLOTS % SHARD_COUNT as u32;
 
 pub const VERSION: &str = "0.1.0"; // versi melisa
 
 pub const HASH_LENGTH: usize = 64; // panjang hash
 
 pub const SECRET_MANAGEMENT_TOKEN: &str = "DEFAULT_SECRET_NODE_TOKEN";
+
+pub const MAX_CONCURRENT_CONNECTIONS: usize = 10000; // Tentukan batas aman
 
 // Salin melisa.conf.example ke melisa.conf jika tidak ada
 pub const CONFIG_PATH: &str = "melisa.conf"; // file konfigurasi
@@ -68,11 +82,23 @@ pub struct NodesConfig {
     #[serde(default = "default_storage_file")]
     pub storage_file: String,
 
+    #[serde(default)]
+    pub allowed_nodes: Vec<AllowedNodeConfig>,
+
     #[serde(default = "default_flush_threshold")]
     pub flush_threshold_bytes: u64,
 
     #[serde(default = "default_health_check_interval")]
     pub health_check_interval_secs: u64,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct AllowedNodeConfig {
+    pub name: String,
+    #[serde(default)]
+    pub url: Option<String>,
+    pub domain: String,
+    pub route_path: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -109,6 +135,7 @@ impl Default for NodesConfig {
     fn default() -> Self {
         NodesConfig {
             storage_file: default_storage_file(),
+            allowed_nodes: Vec::new(),
             flush_threshold_bytes: default_flush_threshold(),
             health_check_interval_secs: default_health_check_interval(),
         }
@@ -241,5 +268,39 @@ max_retries = 5
         assert_eq!(config.proxy.load_balancer_strategy, "least_connections");
         assert_eq!(config.proxy.request_timeout_secs, 60);
         assert_eq!(config.proxy.max_retries, 5);
+    }
+
+    #[test]
+    fn test_load_config_with_allowed_nodes() {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(
+            file,
+            r#"
+host = "127.0.0.1"
+port = 8080
+
+[[nodes.allowed_nodes]]
+name = "node1"
+url = "http://127.0.0.1:3000"
+domain = "melisa.local"
+route_path = "/"
+
+[[nodes.allowed_nodes]]
+name = "api-root"
+domain = "api.melisa.local"
+route_path = "/api"
+"#
+        )
+        .unwrap();
+
+        let config = Config::from_file(file.path().to_str().unwrap()).unwrap();
+        assert_eq!(config.nodes.allowed_nodes.len(), 2);
+        assert_eq!(config.nodes.allowed_nodes[0].name, "node1");
+        assert_eq!(
+            config.nodes.allowed_nodes[0].url.as_deref(),
+            Some("http://127.0.0.1:3000")
+        );
+        assert_eq!(config.nodes.allowed_nodes[1].name, "api-root");
+        assert!(config.nodes.allowed_nodes[1].url.is_none());
     }
 }

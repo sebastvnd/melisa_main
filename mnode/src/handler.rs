@@ -1,12 +1,11 @@
+use http_body_util::Full;
+use hyper::body::Bytes;
 /// HTTP Request Handler untuk mnode
 use hyper::body::Incoming;
 use hyper::{Request, Response, StatusCode};
-use http_body_util::Full;
-use hyper::body::Bytes;
 use serde_json::json;
-use std::sync::Arc;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::config::NodeConfig;
 
@@ -69,8 +68,7 @@ fn serve_static_file(path: &str, config: &NodeConfig) -> Result<Response<Full<By
     }
 
     // Read file content
-    let content = fs::read(&canonical_target)
-        .map_err(|e| format!("Gagal membaca file: {}", e))?;
+    let content = fs::read(&canonical_target).map_err(|e| format!("Gagal membaca file: {}", e))?;
 
     // Guess MIME type
     let mime_type = mime_guess::from_path(&canonical_target)

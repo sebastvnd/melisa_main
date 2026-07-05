@@ -1,3 +1,7 @@
+// mcore/mlog/logger.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 /// Logger utama dengan buffering dan rotation
 use crate::mcore::config::load_config::CONFIG;
 use crate::mcore::mlog::log_config::LogConfig;

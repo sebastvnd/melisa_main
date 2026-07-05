@@ -1,3 +1,7 @@
+// mcore/melisad/proxy/handler.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 /// HTTP request handling - routing dan forwarding
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
@@ -11,6 +15,7 @@ use crate::mcore::melisad::proxy::forwarder::forward_request_with_retry;
 use crate::mcore::melisad::proxy::loadbalancer::LoadBalancer;
 use crate::mcore::melisad::proxy::metrics::ProxyMetrics;
 use crate::mcore::melisad::services::node::NODE_MANAGER;
+use crate::mcore::melisad::services::node::types::NodeStatus;
 use crate::mcore::mlog::LOGGER;
 
 pub async fn handle_proxy_request(
@@ -42,7 +47,10 @@ pub async fn handle_proxy_request(
 
     // Try to select node via load balancer
     if let Some(target_node) = load_balancer.select_node(&host, &path, &NODE_MANAGER) {
-        let upstream_node_name = format!("{} ({})", target_node.name, target_node.url);
+        let upstream_node_name = format!(
+            "{} ({})",
+            target_node.identity.name, target_node.identity.url
+        );
         let _ = LOGGER.log_debug(&format!(
             "[{}] Route matched -> {}",
             request_id, upstream_node_name
@@ -51,7 +59,7 @@ pub async fn handle_proxy_request(
         // Construct upstream URL
         let upstream_url = format!(
             "{}{}",
-            target_node.url.trim_end_matches('/'),
+            target_node.identity.url.trim_end_matches('/'),
             path_and_query
         );
 
@@ -82,7 +90,7 @@ pub async fn handle_proxy_request(
                     forwarded.status.as_u16(),
                     bytes_len,
                     duration_ms,
-                    Some(&target_node.name),
+                    Some(&target_node.identity.name),
                 );
 
                 let mut proxy_response = Response::new(Full::new(forwarded.body));
@@ -148,12 +156,8 @@ pub async fn handle_proxy_request(
 
         // --- 2. MODIFIKASI: CEK APAKAH ADA NODE AKTIF DI DALAM REGISTRY ---
         let total_active_nodes = NODE_MANAGER
-            .processes
-            .read()
-            .unwrap()
-            .values()
-            .filter(|node| node.status == crate::mcore::melisad::services::node::NodeStatus::Active)
-            .count();
+            .get_pids_by_status(|status| *status == NodeStatus::Active)
+            .len();
 
         let (status_code, html_body) = if total_active_nodes == 0 {
             let _ = LOGGER.log_error(&format!(

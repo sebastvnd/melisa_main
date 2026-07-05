@@ -1,3 +1,7 @@
+// mcore/mlog/log_config.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 /// Konfigurasi logging untuk Melisa
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};

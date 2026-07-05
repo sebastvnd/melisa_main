@@ -6,10 +6,10 @@
 //! - Backend operations dengan API endpoints
 //! - Auto-register ke melisa management API
 
-use std::sync::Arc;
-use tokio::net::TcpListener;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
+use std::sync::Arc;
+use tokio::net::TcpListener;
 
 mod config;
 mod handler;
@@ -44,20 +44,27 @@ async fn main() {
     println!("Node URL: {}", config.node_url());
     println!("Domain: {}", config.domain);
     println!("Route Path: {}", config.route_path);
-    println!("Static Files: {} ({})", 
+    println!(
+        "Static Files: {} ({})",
         config.static_files_dir,
-        if config.static_files_enabled { "enabled" } else { "disabled" }
+        if config.static_files_enabled {
+            "enabled"
+        } else {
+            "disabled"
+        }
     );
-    println!("Melisa Management: {}:{}", config.melisa_host, config.melisa_port);
+    println!(
+        "Melisa Management: {}:{}",
+        config.melisa_host, config.melisa_port
+    );
     println!("");
 
     // Register dengan melisa
     println!("Connecting to Melisa Management API...");
 
-    let config_clone = config.clone();
-
+    let registration_config = config.clone();
     tokio::spawn(async move {
-        if let Err(e) = register_with_melisa(&config).await {
+        if let Err(e) = register_with_melisa(&registration_config).await {
             eprintln!("⚠ Warning: Failed to register with Melisa: {}", e);
             eprintln!("Continuing anyway - node will be unavailable until registered");
         } else {
@@ -65,11 +72,6 @@ async fn main() {
         }
     });
 
-    run_node_server(&config).await?;
-
-    println!("");
-
-    // Start HTTP server
     if let Err(e) = run_node_server(&config).await {
         eprintln!("Node stopped: {}", e);
         std::process::exit(1);
@@ -93,7 +95,10 @@ async fn run_node_server(config: &NodeConfig) -> Result<(), Box<dyn std::error::
     println!("");
     println!("Static Files Location: {}", config.static_files_dir);
     println!("To add custom files:");
-    println!("  1. Create/edit HTML files in: {}", config.static_files_dir);
+    println!(
+        "  1. Create/edit HTML files in: {}",
+        config.static_files_dir
+    );
     println!("  2. MNode will auto-serve them from / path");
     println!("");
 
@@ -118,4 +123,3 @@ async fn run_node_server(config: &NodeConfig) -> Result<(), Box<dyn std::error::
         });
     }
 }
-

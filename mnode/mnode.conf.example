@@ -21,6 +21,10 @@ node_name = "mnode-service"
 node_domain = "melisa"
 node_route_path = "/"
 
+# Kosongkan untuk node utama yang sudah masuk allowlist.
+# Isi dengan invite code dari parent untuk node child/replica.
+invite_code = ""
+
 # ============================================================================
 # [static_files] - Static file serving configuration
 # ============================================================================

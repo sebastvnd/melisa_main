@@ -1,3 +1,7 @@
+// mcore/mod.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 // melisa core
 
 // STANDART DATE FLOW MCORE

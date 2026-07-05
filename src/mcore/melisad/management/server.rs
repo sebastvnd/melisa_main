@@ -1,3 +1,7 @@
+// mcore/melisad/management/server.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 /// Management Server - dedicated port untuk node management operations
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;

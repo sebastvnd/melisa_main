@@ -1,6 +1,10 @@
+// mcore/melisad/probes/liveness_node.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use reqwest;
 
-use crate::mcore::melisad::services::node::NodeStatus;
+use crate::mcore::melisad::services::node::types::NodeStatus;
 
 // Check satu node secara khusus
 pub async fn check_node_network(url: String) -> NodeStatus {

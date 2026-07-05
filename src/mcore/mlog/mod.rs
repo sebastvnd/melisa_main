@@ -1,3 +1,7 @@
+// mcore/mlog/mod.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 /// Melisa Logging System
 ///
 /// Robust logging system inspired by Nginx

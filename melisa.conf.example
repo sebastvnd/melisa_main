@@ -64,6 +64,21 @@ flush_threshold_bytes = 51200  # 50 KB
 # Interval health-check node berkala (dalam seconds)
 health_check_interval_secs = 30
 
+# Daftar node utama/root yang boleh mendaftar tanpa invite.
+# Replica/child tidak perlu masuk daftar ini; mereka memakai invite_code dari parent.
+# Untuk load balancer, domain+route_path boleh sama, tapi URL tiap backend harus berbeda.
+[[nodes.allowed_nodes]]
+name = "node1"
+url = "http://127.0.0.1:3000"
+domain = "melisa.local"
+route_path = "/"
+
+[[nodes.allowed_nodes]]
+name = "api-root"
+url = "http://127.0.0.1:3100"
+domain = "api.melisa.local"
+route_path = "/api"
+
 # ============================================================================
 # [proxy] - Proxy Behavior Configuration
 # ============================================================================

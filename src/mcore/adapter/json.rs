@@ -1,8 +1,11 @@
+// mcore/adapter/json.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use serde::{Deserialize, Serialize};
 
 use crate::mcore::api::services::{create_node, delete_node};
 use crate::mcore::errors::enode::NodeError;
-use crate::mcore::melisad::services::node::NodeProcess;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiRequest<T> {
@@ -29,6 +32,8 @@ pub struct CreateNodeData {
     pub route_path: String,
     pub ip: String,
     pub version: String,
+    #[serde(default)]
+    pub invite_code: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -39,11 +44,7 @@ pub enum Action {
 
 /// Adapter layer: Convert HTTP request ke API call
 /// Alur: HTTP body → CreateNodeData → create_node() → NODE_MANAGER
-
-// TODO kurang 6 aguments lagi ini karna tambahan
-pub async fn api_create_node(
-    request: &ApiRequest<CreateNodeData>,
-) -> Result<NodeProcess, NodeError> {
+pub async fn api_create_node(request: &ApiRequest<CreateNodeData>) -> Result<u32, NodeError> {
     create_node(
         &request.data.name,
         &request.data.url,
@@ -51,22 +52,23 @@ pub async fn api_create_node(
         &request.data.route_path,
         &request.data.ip,
         &request.data.version,
+        request.data.invite_code.as_deref(),
     )
     .await
 }
 
-pub fn api_delete_node(hash: &str) -> Result<(), NodeError> {
-    delete_node(hash)
+pub fn api_delete_node(pid: u32) -> Result<(), NodeError> {
+    delete_node(pid)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::mcore::config::load_config::NODE_FILE;
+    use crate::mcore::api::services::allow_node;
     use crate::mcore::melisad::services::node::NODE_MANAGER;
+    use crate::mcore::melisad::services::node::allowlist::NODE_ALLOWLIST;
     use once_cell::sync::Lazy;
     use serial_test::{self, serial};
-    use std::fs;
     use std::sync::Mutex;
 
     static TEST_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
@@ -75,10 +77,15 @@ mod test {
     #[serial]
     async fn test_new_node() {
         let _guard = TEST_LOCK.lock().unwrap();
-        let _ = fs::write(NODE_FILE, "{}");
-
-        // Reset singleton node manager untuk test
         NODE_MANAGER.reset_for_test();
+        NODE_ALLOWLIST.reset_for_test();
+        allow_node(
+            "melisa-api",
+            Some("http://localhost:3000"),
+            "melisa.local",
+            "/beta",
+        )
+        .unwrap();
 
         let node = ApiRequest {
             version: "1.0".to_string(),
@@ -92,6 +99,7 @@ mod test {
                 route_path: "/beta".to_string(),
                 ip: "192.0.0.1".to_string(),
                 version: "0.1.0".to_string(),
+                invite_code: None,
             },
         };
 
@@ -103,11 +111,12 @@ mod test {
         );
 
         // Verify bahwa node berhasil dibuat
-        let first_node = first.unwrap();
-        assert_eq!(first_node.name, "melisa-api");
+        let pid = first.unwrap();
+        let first_node = NODE_MANAGER.get(pid).expect("node must exist");
+        assert_eq!(first_node.identity.name, "melisa-api");
         assert_eq!(
-            first_node.status,
-            crate::mcore::melisad::services::node::NodeStatus::Active
+            first_node.health.status,
+            crate::mcore::melisad::services::node::NodeStatusSerde::Active
         );
     }
 
@@ -115,10 +124,15 @@ mod test {
     #[serial]
     async fn test_delete_node() {
         let _guard = TEST_LOCK.lock().unwrap();
-        let _ = fs::write(NODE_FILE, "{}");
-
-        // Reset dan setup test
         NODE_MANAGER.reset_for_test();
+        NODE_ALLOWLIST.reset_for_test();
+        allow_node(
+            "melisa-delete-test",
+            Some("http://localhost:3001"),
+            "delete.local",
+            "/test",
+        )
+        .unwrap();
 
         let node = ApiRequest {
             version: "1.0".to_string(),
@@ -132,6 +146,7 @@ mod test {
                 route_path: "/test".to_string(),
                 ip: "192.0.0.1".to_string(),
                 version: "0.1.0".to_string(),
+                invite_code: None,
             },
         };
 
@@ -141,17 +156,16 @@ mod test {
             "Node harus berhasil dibuat terlebih dahulu"
         );
 
-        let hash_target = create_result.unwrap().hash;
+        let pid = create_result.unwrap();
 
-        // Test delete
-        let delete_result = delete_node(&hash_target);
+        let delete_result = delete_node(pid);
         assert!(
             delete_result.is_ok(),
             "Harusnya sukses menghapus node yang ada"
         );
 
         // Verify node sudah terhapus (tidak bisa delete ulang)
-        let delete_again = delete_node(&hash_target);
+        let delete_again = delete_node(pid);
         assert!(
             matches!(delete_again, Err(NodeError::NotFound)),
             "Harusnya gagal menghapus node yang sudah terhapus"

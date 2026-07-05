@@ -1,11 +1,18 @@
-/// Proxy server main loop - accepts connections dan dispatches requests
+// mcore/melisad/proxy/server.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
+use http_body_util::Full;
+use hyper::body::Bytes;
 use hyper::service::service_fn;
+use hyper::{Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
+use tokio::sync::Semaphore;
 
-use crate::mcore::config::load_config::CONFIG;
+use crate::mcore::config::load_config::{CONFIG, MAX_CONCURRENT_CONNECTIONS};
 use crate::mcore::melisad::proxy::handler::handle_proxy_request;
 use crate::mcore::melisad::proxy::loadbalancer::{LoadBalancer, LoadBalancingStrategy};
 use crate::mcore::melisad::proxy::metrics::ProxyMetrics;
@@ -54,9 +61,6 @@ pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send +
     let metrics = Arc::new(ProxyMetrics::new());
     let metrics_clone = metrics.clone();
 
-    // TODO PINDAHIN INI KE CONFIG
-    const MAX_CONCURRENT_CONNECTIONS: usize = 10000; // Tentukan batas aman
-
     // Spawn metrics reporter
     tokio::spawn(async move {
         loop {
@@ -68,45 +72,68 @@ pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error + Send +
         }
     });
 
+    let global_limit = Arc::new(Semaphore::new(MAX_CONCURRENT_CONNECTIONS));
+
     // Main accept loop
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         let peer_addr = peer_addr.to_string();
 
-        // --- MITIGASI DOS: PEMBATASAN KONEKSI KONTEMPORER ---
-        let current_active = metrics
-            .active_connections
-            .load(std::sync::atomic::Ordering::Relaxed);
-        if current_active >= MAX_CONCURRENT_CONNECTIONS {
-            let _ = LOGGER.log_error(&format!(
-                "DoS Protection: Dropping connection from {} due to high load",
-                peer_addr
-            ));
-            continue; // Tolak koneksi baru secara instan jika server penuh
-        }
-        // ---------------------------------------------------
-
         metrics.increment_active();
+
         let metrics_clone = metrics.clone();
+        let client_clone = client.clone();
+        let lb_clone = load_balancer.clone();
+        let global_limit_clone = global_limit.clone();
 
-        let client = client.clone();
-        let lb = load_balancer.clone();
-        let metrics = metrics.clone();
-
-        // Spawn handler per connection
         tokio::spawn(async move {
-            let svc = service_fn(|req| {
-                let client = client.clone();
-                let lb = lb.clone();
-                let metrics = metrics.clone();
-                let peer_addr = peer_addr.clone();
+            let _permit = match global_limit_clone.try_acquire_owned() {
+                Ok(permit) => permit,
+                Err(_) => {
+                    // SERVER OVERLOAD! Lakukan Load Shedding secara elegan via HTTP 503
+                    let _ = LOGGER.log_error(&format!(
+                        "Load Shedding: Server overloaded. Serving HTTP 503 to Klien {}",
+                        peer_addr
+                    ));
 
-                handle_proxy_request(req, client, lb, metrics, peer_addr)
+                    // Buat service darurat untuk mengirimkan sinyal 503 Service Unavailable
+                    let emergency_svc = service_fn(|_req| async {
+                        let html_503 = "<html><head><title>503 Overloaded</title></head>\
+                                            <body style='font-family:sans-serif; text-align:center; padding-top:100px;'>\
+                                            <h1>503 Service Unavailable</h1>\
+                                            <p>Mohon maaf, server sedang menerima beban trafik yang sangat tinggi. Silakan coba sesaat lagi.</p>\
+                                            </body></html>";
+
+                        let mut res = Response::new(Full::new(Bytes::from(html_503)));
+                        *res.status_mut() = StatusCode::SERVICE_UNAVAILABLE;
+                        res.headers_mut().insert(
+                            hyper::header::CONTENT_TYPE,
+                            hyper::header::HeaderValue::from_static("text/html; charset=utf-8"),
+                        );
+                        Ok::<_, hyper::Error>(res)
+                    });
+
+                    let io = TokioIo::new(stream);
+                    let _ = hyper::server::conn::http1::Builder::new()
+                        .serve_connection(io, emergency_svc)
+                        .await;
+
+                    metrics_clone.decrement_active();
+                    return;
+                }
+            };
+
+            let svc = service_fn(|req| {
+                handle_proxy_request(
+                    req,
+                    client_clone.clone(),
+                    lb_clone.clone(),
+                    metrics_clone.clone(),
+                    peer_addr.clone(),
+                )
             });
 
-            // Wrap tokio socket with hyper-util's TokioIo adapter
             let io = TokioIo::new(stream);
-
             if let Err(err) = hyper::server::conn::http1::Builder::new()
                 .serve_connection(io, svc)
                 .await

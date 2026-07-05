@@ -6,7 +6,7 @@
 //! project like Nginx or Pingora.
 //!
 //! Copyright (c) 2026 sebastvn.d
-//!
+
 //! - **Version:** 0.1.0-beta
 //! - **License:** MIT
 
@@ -21,8 +21,9 @@ use std::time::Duration;
 
 // Di mulai untuk umat manusia
 // Juni 2026
-// Kita ke ijen kan?
-// Kamu masih ingetkan ..... f
+
+// Kita bakal ke ijen bareng kan?
+// Kamu masih ingetkan afiraaa >.<
 
 #[tokio::main]
 async fn main() {
@@ -34,10 +35,9 @@ async fn main() {
     }
 }
 
-// TODO masih banyak implementasi yang berantakan
 async fn run_melisa() -> Result<(), Box<dyn Error + Send + Sync>> {
     let config = &*CONFIG;
-    let node_count = NODE_MANAGER.list().map_or(0, |nodes| nodes.len());
+    let node_count = NODE_MANAGER.list().len();
 
     println!();
     println!("╔════════════════════════════════════════════╗");

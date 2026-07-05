@@ -8,13 +8,14 @@ pub const SECRET_MANAGEMENT_TOKEN: &str = "DEFAULT_SECRET_NODE_TOKEN";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NodeConfig {
-    pub name: String,           // ← Node name for registration
+    pub name: String, // ← Node name for registration
     pub host: String,
     pub port: u16,
     pub melisa_host: String,
     pub melisa_port: u16,
     pub domain: String,
     pub route_path: String,
+    pub invite_code: Option<String>,
     pub static_files_dir: String,
     pub static_files_enabled: bool,
     pub api_enabled: bool,
@@ -35,14 +36,13 @@ impl NodeConfig {
     }
 
     pub fn from_env() -> Self {
-        let node_name = env::var("MNODE_NAME")
-            .unwrap_or_else(|_| {
-                let hostname = hostname::get()
-                    .ok()
-                    .and_then(|h| h.into_string().ok())
-                    .unwrap_or_else(|| "mnode".to_string());
-                format!("mnode-{}", hostname)
-            });
+        let node_name = env::var("MNODE_NAME").unwrap_or_else(|_| {
+            let hostname = hostname::get()
+                .ok()
+                .and_then(|h| h.into_string().ok())
+                .unwrap_or_else(|| "mnode".to_string());
+            format!("mnode-{}", hostname)
+        });
 
         let port: u16 = env::var("MNODE_PORT")
             .ok()
@@ -57,7 +57,11 @@ impl NodeConfig {
 
         let domain = env::var("MNODE_DOMAIN").unwrap_or_else(|_| "mnode.local".to_string());
         let route_path = env::var("MNODE_ROUTE_PATH").unwrap_or_else(|_| "/mnode".to_string());
-        let static_files_dir = env::var("STATIC_FILES_DIR").unwrap_or_else(|_| "./public/html".to_string());
+        let invite_code = env::var("MNODE_INVITE_CODE")
+            .ok()
+            .filter(|code| !code.trim().is_empty());
+        let static_files_dir =
+            env::var("STATIC_FILES_DIR").unwrap_or_else(|_| "./public/html".to_string());
 
         NodeConfig {
             name: node_name,
@@ -67,6 +71,7 @@ impl NodeConfig {
             melisa_port,
             domain,
             route_path,
+            invite_code,
             static_files_dir,
             static_files_enabled: true,
             api_enabled: true,
@@ -87,13 +92,13 @@ impl NodeConfig {
 struct TomlConfig {
     host: String,
     port: u16,
-    
+
     #[serde(default)]
     registration: RegistrationConfig,
-    
+
     #[serde(default)]
     static_files: StaticFilesConfig,
-    
+
     #[serde(default)]
     api: ApiConfig,
 }
@@ -106,6 +111,7 @@ struct RegistrationConfig {
     node_name: String,
     node_domain: String,
     node_route_path: String,
+    invite_code: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -130,6 +136,7 @@ impl Default for RegistrationConfig {
             node_name: "mnode-service".to_string(),
             node_domain: "mnode.local".to_string(),
             node_route_path: "/mnode".to_string(),
+            invite_code: None,
         }
     }
 }
@@ -162,10 +169,10 @@ impl TomlConfig {
             melisa_port: self.registration.melisa_port,
             domain: self.registration.node_domain,
             route_path: self.registration.node_route_path,
+            invite_code: self.registration.invite_code,
             static_files_dir: self.static_files.directory,
             static_files_enabled: self.static_files.enabled,
             api_enabled: self.api.enabled,
         }
     }
 }
-

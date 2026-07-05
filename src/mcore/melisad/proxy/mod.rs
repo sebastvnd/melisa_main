@@ -1,3 +1,7 @@
+// mcore/melisad/proxy/mod.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 pub mod forwarder;
 pub mod handler;
 pub mod loadbalancer;

@@ -1,3 +1,7 @@
+// mcore/errors/enode.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 #[derive(Debug)]
 pub enum NodeError {
     AlreadyExists,           // Error jika node dengan nama tersebut sudah ada
@@ -6,6 +10,9 @@ pub enum NodeError {
     NotFound,
     InvalidInput(String), // Untuk input yang tidak valid, seperti nama kosong
     FailedValidation(String), // gagal memvalidasi node
+    RegistryFull,
+    NotAllowed(String),
+    InvalidInvite,
 }
 
 impl std::fmt::Display for NodeError {
@@ -17,6 +24,9 @@ impl std::fmt::Display for NodeError {
             NodeError::NotFound => write!(f, "node not found"),
             NodeError::InvalidInput(msg) => write!(f, "invalid node input: {}", msg),
             NodeError::FailedValidation(msg) => write!(f, "node validation failed: {}", msg),
+            NodeError::RegistryFull => write!(f, "node registry is full"),
+            NodeError::NotAllowed(msg) => write!(f, "node is not allowed: {}", msg),
+            NodeError::InvalidInvite => write!(f, "invalid node invite code"),
         }
     }
 }

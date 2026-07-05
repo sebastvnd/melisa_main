@@ -1,16 +1,17 @@
+// mcore/handler/handler.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use chrono::Utc;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
-/// Management API Handler - handle register/unregister node requests
-/// Alur data:
-/// HTTP request → handler (parsing) → adapter (format) → api/services (logic) → melisad (NODE_MANAGER)
 use hyper::body::Incoming;
 use hyper::{Request, Response, StatusCode};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
 use crate::mcore::adapter::json::{Action, ApiRequest, CreateNodeData, api_create_node};
-use crate::mcore::api::services::delete_node;
+use crate::mcore::api::services::{allow_node, delete_node, list_allowed_nodes};
 use crate::mcore::config::load_config::SECRET_MANAGEMENT_TOKEN;
 use crate::mcore::errors::enode::NodeError;
 use crate::mcore::melisad::services::node::NODE_MANAGER;
@@ -22,15 +23,28 @@ pub struct RegisterNodeRequest {
     pub url: String,
     pub domain: String,
     pub route_path: String,
+    #[serde(default = "default_request_ip")]
     pub ip: String,
+    #[serde(default = "default_request_version")]
     pub version: String,
+    #[serde(default)]
+    pub invite_code: Option<String>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+pub struct AllowNodeRequest {
+    pub name: String,
+    #[serde(default)]
+    pub url: Option<String>,
+    pub domain: String,
+    pub route_path: String,
 }
 
 #[derive(serde::Serialize)]
 pub struct RegisterNodeResponse {
     pub success: bool,
     pub message: String,
-    pub node_hash: Option<String>,
+    pub pid: Option<u32>,
 }
 
 pub async fn handle_management_request(
@@ -38,7 +52,6 @@ pub async fn handle_management_request(
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let (parts, body) = req.into_parts();
 
-    // --- TAMBAHKAN PROTEKSI AUTENTIKASI ---
     let mut authenticated = false;
     if let Some(auth_header) = parts.headers.get(hyper::header::AUTHORIZATION)
         && let Ok(auth_str) = auth_header.to_str()
@@ -48,70 +61,49 @@ pub async fn handle_management_request(
     }
 
     if !authenticated {
-        let error_body = serde_json::json!({
-            "success": false,
-            "message": "Unauthorized: Invalid or missing management token"
-        });
-        return Ok(Response::builder()
-            .status(hyper::StatusCode::UNAUTHORIZED) // 401 Unauthorized
-            .header("Content-Type", "application/json")
-            .body(Full::new(Bytes::from(error_body.to_string())))
-            .unwrap());
+        return Ok(json_response(
+            StatusCode::UNAUTHORIZED,
+            json!({
+                "success": false,
+                "message": "Unauthorized: Invalid or missing management token"
+            }),
+        ));
     }
-    // --------------------------------------
 
     let method = parts.method.clone();
     let path = parts.uri.path().to_string();
     let body_bytes = body.collect().await?.to_bytes();
 
-    let response = match (method.as_str(), path.as_str()) {
+    match (method.as_str(), path.as_str()) {
         ("POST", "/register") => handle_register_node(body_bytes).await,
         ("POST", "/unregister") => handle_unregister_node(body_bytes).await,
         ("GET", "/nodes") => handle_list_nodes().await,
-        _ => {
-            let error_body = json!({
+        ("POST", "/nodes/allow") => handle_allow_node(body_bytes).await,
+        ("GET", "/nodes/allow") => handle_list_allowed_nodes().await,
+        _ => Ok(json_response(
+            StatusCode::NOT_FOUND,
+            json!({
                 "success": false,
                 "message": "Endpoint not found"
-            });
-            Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap())
-        }
-    };
-
-    response
-}
-
-fn build_response(
-    status: StatusCode,
-    body: serde_json::Value,
-) -> Result<Response<Full<Bytes>>, hyper::http::Error> {
-    Response::builder()
-        .status(status)
-        .header("Content-Type", "application/json")
-        .body(Full::new(Bytes::from(body.to_string())))
+            }),
+        )),
+    }
 }
 
 async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hyper::Error> {
-    // Step 1: Parse HTTP request → RegisterNodeRequest
     let req: RegisterNodeRequest = match serde_json::from_slice(&body) {
-        Ok(r) => r,
-        Err(e) => {
-            let error_body = json!({
-                "success": false,
-                "message": format!("Invalid JSON: {}", e)
-            });
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap());
+        Ok(request) => request,
+        Err(err) => {
+            return Ok(json_response(
+                StatusCode::BAD_REQUEST,
+                json!({
+                    "success": false,
+                    "message": format!("Invalid JSON: {}", err)
+                }),
+            ));
         }
     };
 
-    // Step 2: Create ApiRequest wrapper (adapter layer)
     let api_request = ApiRequest {
         version: "1.0".to_string(),
         action: Action::CreateNode,
@@ -124,160 +116,212 @@ async fn handle_register_node(body: Bytes) -> Result<Response<Full<Bytes>>, hype
             route_path: req.route_path,
             ip: req.ip,
             version: req.version,
+            invite_code: req.invite_code,
         },
     };
 
-    // Step 3: Call adapter (json.rs) → api/service → melisad (NODE_MANAGER.create)
     match api_create_node(&api_request).await {
-        Ok(node) => {
+        Ok(pid) => {
+            let identity = NODE_MANAGER.get_identity(pid);
             let _ = LOGGER.log_info(&format!(
-                "Node registered via API: {} at {}",
-                node.name, node.url
+                "Node registered via API: PID {} at {}",
+                pid,
+                identity
+                    .as_ref()
+                    .map(|node| node.url.as_str())
+                    .unwrap_or("-")
             ));
-            let response_body = json!({
-                "success": true,
-                "message": format!("Node '{}' registered successfully", node.name),
-                "node": {
-                    "hash": node.hash,
-                    "name": node.name,
-                    "url": node.url,
-                    "domain": node.domain,
-                    "route_path": node.route_path,
-                    "ip": node.registered_from_ip,
-                    "version": node.version,                }
-            });
-            Ok(Response::builder()
-                .status(StatusCode::CREATED)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(response_body.to_string())))
-                .unwrap())
-        }
-        Err(e) => {
-            let _ = LOGGER.log_error(&format!("Registration failed: {:?}", e));
 
-            // Pilih HTTP status code berdasarkan tipe error
-            let status = match &e {
-                NodeError::AlreadyExists => StatusCode::CONFLICT, // 409
-                NodeError::InvalidInput(_) => StatusCode::BAD_REQUEST, // 400
-                NodeError::NotFound => StatusCode::NOT_FOUND,     // 404
+            Ok(json_response(
+                StatusCode::CREATED,
+                json!({
+                    "success": true,
+                    "message": format!(
+                        "Node '{}' registered successfully",
+                        api_request.data.name
+                    ),
+                    "node": {
+                        "pid": pid,
+                        "name": identity.as_ref().map(|node| &node.name),
+                        "url": identity.as_ref().map(|node| &node.url),
+                        "domain": identity.as_ref().map(|node| &node.domain),
+                        "route_path": identity.as_ref().map(|node| &node.route_path),
+                        "ip": identity.as_ref().map(|node| &node.registered_from_ip),
+                        "version": identity.as_ref().map(|node| &node.version),
+                        "invite_code": identity.as_ref().map(|node| &node.invite_code),
+                        "invited_by": identity.as_ref().and_then(|node| node.invited_by),
+                    }
+                }),
+            ))
+        }
+        Err(err) => {
+            let _ = LOGGER.log_error(&format!("Registration failed: {:?}", err));
+            let status = match &err {
+                NodeError::AlreadyExists => StatusCode::CONFLICT,
+                NodeError::InvalidInput(_) => StatusCode::BAD_REQUEST,
+                NodeError::NotFound => StatusCode::NOT_FOUND,
+                NodeError::RegistryFull => StatusCode::SERVICE_UNAVAILABLE,
+                NodeError::NotAllowed(_) | NodeError::InvalidInvite => StatusCode::FORBIDDEN,
                 NodeError::IoError(_)
                 | NodeError::JsonError(_)
-                | NodeError::FailedValidation(_) => StatusCode::INTERNAL_SERVER_ERROR, // 500
+                | NodeError::FailedValidation(_) => StatusCode::INTERNAL_SERVER_ERROR,
             };
 
-            let error_body = json!({
-                "success": false,
-                "message": format!("Failed to register node: {}", e)   // gunakan Display, bukan Debug
-            });
-            Ok(Response::builder()
-                .status(status)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap())
+            Ok(json_response(
+                status,
+                json!({
+                    "success": false,
+                    "message": format!("Failed to register node: {}", err)
+                }),
+            ))
         }
     }
 }
 
 async fn handle_unregister_node(body: Bytes) -> Result<Response<Full<Bytes>>, hyper::Error> {
-    // Parse request body - expect {"hash": "xxx"}
     let req: Value = match serde_json::from_slice(&body) {
-        Ok(r) => r,
-        Err(e) => {
-            let error_body = json!({
-                "success": false,
-                "message": format!("Invalid JSON: {}", e)
-            });
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap());
+        Ok(request) => request,
+        Err(err) => {
+            return Ok(json_response(
+                StatusCode::BAD_REQUEST,
+                json!({
+                    "success": false,
+                    "message": format!("Invalid JSON: {}", err)
+                }),
+            ));
         }
     };
 
-    let hash = match req.get("hash").and_then(|h| h.as_str()) {
-        Some(h) => h,
+    let pid = match req
+        .get("pid")
+        .and_then(|pid| pid.as_u64())
+        .map(|pid| pid as u32)
+    {
+        Some(pid) => pid,
         None => {
-            let error_body = json!({
-                "success": false,
-                "message": "Missing 'hash' field"
-            });
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap());
+            return Ok(json_response(
+                StatusCode::BAD_REQUEST,
+                json!({
+                    "success": false,
+                    "message": "Missing or invalid 'pid' field"
+                }),
+            ));
         }
     };
 
-    // Try to delete node
-    match delete_node(hash) {
+    match delete_node(pid) {
         Ok(_) => {
-            let _ = LOGGER.log_info(&format!("Node unregistered: {}", hash));
-            let response_body = json!({
-                "success": true,
-                "message": format!("Node '{}' unregistered successfully", hash)
-            });
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(response_body.to_string())))
-                .unwrap())
+            let _ = LOGGER.log_info(&format!("Node unregistered: PID {}", pid));
+            Ok(json_response(
+                StatusCode::OK,
+                json!({
+                    "success": true,
+                    "message": format!("Node PID {} unregistered successfully", pid)
+                }),
+            ))
         }
-        Err(e) => {
-            let error_body = json!({
+        Err(err) => Ok(json_response(
+            StatusCode::NOT_FOUND,
+            json!({
                 "success": false,
-                "message": format!("Failed to unregister node: {:?}", e)
-            });
-            Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(error_body.to_string())))
-                .unwrap())
-        }
+                "message": format!("Failed to unregister node: {}", err)
+            }),
+        )),
     }
 }
 
 async fn handle_list_nodes() -> Result<Response<Full<Bytes>>, hyper::Error> {
-    match NODE_MANAGER.list() {
-        Some(node_hashes) => {
-            // Get full node info for each hash
-            let mut nodes = vec![];
-            for hash in node_hashes {
-                if let Some(node) = NODE_MANAGER.get(&hash) {
-                    nodes.push(json!({
-                        "hash": node.hash,
-                        "name": node.name,
-                        "url": node.url,
-                        "domain": node.domain,
-                        "route_path": node.route_path,
-                        "status": format!("{:?}", node.status)
-                    }));
-                }
-            }
+    let mut nodes = Vec::new();
 
-            let response_body = json!({
-                "success": true,
-                "count": nodes.len(),
-                "nodes": nodes
-            });
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(response_body.to_string())))
-                .unwrap())
-        }
-        None => {
-            let response_body = json!({
-                "success": true,
-                "count": 0,
-                "nodes": []
-            });
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .header("Content-Type", "application/json")
-                .body(Full::new(Bytes::from(response_body.to_string())))
-                .unwrap())
+    for pid in NODE_MANAGER.list() {
+        if let Some(node) = NODE_MANAGER.get(pid) {
+            nodes.push(json!({
+                "pid": node.pid,
+                "name": node.identity.name,
+                "url": node.identity.url,
+                "domain": node.identity.domain,
+                "route_path": node.identity.route_path,
+                "status": format!("{:?}", node.health.status),
+                "invite_code": node.identity.invite_code,
+                "invited_by": node.identity.invited_by
+            }));
         }
     }
+
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "success": true,
+            "count": nodes.len(),
+            "nodes": nodes
+        }),
+    ))
+}
+
+async fn handle_allow_node(body: Bytes) -> Result<Response<Full<Bytes>>, hyper::Error> {
+    let req: AllowNodeRequest = match serde_json::from_slice(&body) {
+        Ok(request) => request,
+        Err(err) => {
+            return Ok(json_response(
+                StatusCode::BAD_REQUEST,
+                json!({
+                    "success": false,
+                    "message": format!("Invalid JSON: {}", err)
+                }),
+            ));
+        }
+    };
+
+    match allow_node(&req.name, req.url.as_deref(), &req.domain, &req.route_path) {
+        Ok(entry) => Ok(json_response(
+            StatusCode::CREATED,
+            json!({
+                "success": true,
+                "message": format!("Node '{}' added to allowlist", entry.name),
+                "allowed_node": entry
+            }),
+        )),
+        Err(err) => {
+            let status = match &err {
+                NodeError::AlreadyExists => StatusCode::CONFLICT,
+                NodeError::InvalidInput(_) => StatusCode::BAD_REQUEST,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            Ok(json_response(
+                status,
+                json!({
+                    "success": false,
+                    "message": format!("{}", err)
+                }),
+            ))
+        }
+    }
+}
+
+async fn handle_list_allowed_nodes() -> Result<Response<Full<Bytes>>, hyper::Error> {
+    let nodes = list_allowed_nodes();
+    Ok(json_response(
+        StatusCode::OK,
+        json!({
+            "success": true,
+            "count": nodes.len(),
+            "allowed_nodes": nodes
+        }),
+    ))
+}
+
+fn json_response(status: StatusCode, body: serde_json::Value) -> Response<Full<Bytes>> {
+    Response::builder()
+        .status(status)
+        .header("Content-Type", "application/json")
+        .body(Full::new(Bytes::from(body.to_string())))
+        .unwrap()
+}
+
+fn default_request_ip() -> String {
+    "unknown".to_string()
+}
+
+fn default_request_version() -> String {
+    "unknown".to_string()
 }

@@ -1,38 +1,67 @@
-use crate::mcore::melisad::services::node::{NodeManager, NodeProcess, NodeStatus};
+// mcore/melisad/probes/find_node.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
 
-/// Fungsi untuk mencari node yang cocok berdasarkan domain dan path request.
+use crate::mcore::config::load_config::PID_START;
+use crate::mcore::melisad::services::node::manager::NodeManager;
+use crate::mcore::melisad::services::node::models::NodeProcessView;
+use crate::mcore::melisad::services::node::types::split_sparse_idx;
+
 impl NodeManager {
-    pub fn find_node_by_route(&self, domain: &str, path: &str) -> Option<NodeProcess> {
+    pub fn find_node_by_route(&self, domain: &str, path: &str) -> Option<NodeProcessView> {
         self.find_matching_nodes_by_route(domain, path)
             .into_iter()
             .next()
     }
 
-    pub fn find_matching_nodes_by_route(&self, domain: &str, path: &str) -> Vec<NodeProcess> {
-        let processes_lock = self.processes.read().unwrap();
+    pub fn find_matching_nodes_by_route(&self, domain: &str, path: &str) -> Vec<NodeProcessView> {
         let request_host = normalize_host(domain);
         let request_path = normalize_request_path(path);
 
-        let mut matching_nodes: Vec<NodeProcess> = processes_lock
-            .values()
-            .filter(|node| node.status == NodeStatus::Active)
-            .filter(|node| {
-                domain_matches(&node.domain, &request_host)
-                    && route_matches(&node.route_path, &request_path)
-            })
-            .cloned()
-            .collect();
+        let root = match self.radix_table.get(&request_host) {
+            Some(root) => root.clone(),
+            None => return Vec::new(),
+        };
 
-        if let Some(max_specificity) = matching_nodes
-            .iter()
-            .map(|node| route_specificity(&node.route_path))
-            .max()
-        {
-            matching_nodes.retain(|node| route_specificity(&node.route_path) == max_specificity);
+        let segments = request_path
+            .split('/')
+            .filter(|segment| !segment.is_empty());
+        let mut current = root;
+        let mut best_sparse_indices = {
+            let indices = current.sparse_indices.read();
+            (!indices.is_empty()).then(|| indices.clone())
+        };
+
+        for segment in segments {
+            let next = {
+                let Some(next_ref) = current.children.get(segment) else {
+                    break;
+                };
+                next_ref.clone()
+            };
+            current = next;
+
+            let indices = current.sparse_indices.read();
+            if !indices.is_empty() {
+                best_sparse_indices = Some(indices.clone());
+            }
         }
 
-        matching_nodes.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.url.cmp(&b.url)));
-        matching_nodes
+        best_sparse_indices
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|sparse_idx| {
+                let (shard_id, local_idx) = split_sparse_idx(sparse_idx);
+                let shard = self.shards[shard_id].lock();
+                let identity = shard.get_identity(local_idx)?;
+                let health = shard.get_health_handle(local_idx)?;
+                Some(NodeProcessView {
+                    pid: PID_START + sparse_idx,
+                    identity,
+                    health: health.snapshot(),
+                })
+            })
+            .collect()
     }
 }
 

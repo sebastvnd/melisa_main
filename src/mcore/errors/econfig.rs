@@ -1,3 +1,7 @@
+// mcore/errors/econfig.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 // src/mcore/errors/econfig.rs
 #[derive(Debug)]
 pub enum ConfigError {

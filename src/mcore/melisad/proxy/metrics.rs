@@ -1,3 +1,7 @@
+// mcore/melisad/proxy/metrics.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use crate::mcore::mlog::LOGGER;
 /// Proxy metrics tracking dan reporting
 use std::sync::atomic::{AtomicUsize, Ordering};

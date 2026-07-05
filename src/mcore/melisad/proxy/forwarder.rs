@@ -1,5 +1,8 @@
+// mcore/melisad/proxy/forwarder.rs
+// Copyright (c) 2026 Erick Adriano
+// Licensed under the MIT License.
+
 use crate::mcore::mlog::LOGGER;
-/// Request forwarding ke upstream dengan retry logic
 use hyper::body::Bytes;
 use hyper::{HeaderMap, Method, StatusCode};
 use std::time::Duration;
